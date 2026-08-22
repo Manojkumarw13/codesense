@@ -447,7 +447,7 @@ The simulator can generate realistic correlated engineering events continuously.
 
 ---
 
-# Phase 5 — Event Ingestion Pipeline
+# Phase 5 — Event Ingestion Pipeline ✅
 
 ## Objective
 
@@ -471,12 +471,12 @@ GET  /api/v1/events
 
 Implement validation for:
 
-- [ ] Provider.
-- [ ] Event ID.
-- [ ] Event type.
-- [ ] Timestamp.
-- [ ] Payload.
-- [ ] Source.
+- [x] Provider.
+- [x] Event ID.
+- [x] Event type.
+- [x] Timestamp.
+- [x] Payload.
+- [x] Source.
 
 ---
 

@@ -270,12 +270,12 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Deterministic when seeded; realistic timestamps; **sends through the real ingestion API** (never bypasses pipeline)
 - **DoD:** Simulator streams realistic, correlated events continuously.
 
-### Phase 5 — Ingestion Pipeline
-- [ ] `POST /events`, `/batch`, `GET /events`
-- [ ] Validation: provider, event id, event type, timestamp, payload, source
-- [ ] Dedup via `provider + external_event_id` (idempotency)
-- [ ] Raw storage with `processing_status` (PENDING/PROCESSING/PROCESSED/FAILED)
-- [ ] Quarantine / dead-letter for invalid events
+### Phase 5 — Ingestion Pipeline ✅
+- [x] `POST /events`, `/batch`, `GET /events`
+- [x] Validation: provider, event id, event type, timestamp, payload, source
+- [x] Dedup via `provider + external_event_id` (idempotency)
+- [x] Raw storage with `processing_status` (PENDING/PROCESSING/PROCESSED/FAILED)
+- [x] Quarantine / dead-letter for invalid events
 - **DoD:** Thousands of simulated events ingested reliably, no duplicates.
 
 ### Phase 6 — Canonical Data Layer

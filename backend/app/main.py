@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.settings import settings
-from backend.app.api.endpoints import health
+from backend.app.api.endpoints import health, events
 from backend.app.core.logging import setup_logging
 from backend.app.core.middleware import RequestIDMiddleware
 from backend.app.core.exceptions import register_exception_handlers
@@ -31,6 +31,7 @@ register_exception_handlers(app)
 
 # Include routers
 app.include_router(health.router, prefix=settings.API_V1_STR, tags=["health"])
+app.include_router(events.router, prefix=settings.API_V1_STR, tags=["events"])
 
 @app.get("/")
 def read_root():
