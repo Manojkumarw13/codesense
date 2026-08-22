@@ -15,8 +15,10 @@ logger = logging.getLogger("codesense.simulator")
 app = FastAPI(title="CodeSense Real-Time Data Simulator")
 
 # Configuration
-BACKEND_URL = "http://localhost:8000/api/v1/events"
-BACKEND_BATCH_URL = "http://localhost:8000/api/v1/events/batch"
+import os
+BASE_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = f"{BASE_URL}/api/v1/events"
+BACKEND_BATCH_URL = f"{BASE_URL}/api/v1/events/batch"
 
 # Simulator State
 class SimulatorState:
