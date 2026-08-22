@@ -255,11 +255,11 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Add required indexes
 - **DoD:** Full schema created from a clean DB via migrations only.
 
-### Phase 3 — Backend Foundation
-- [ ] App structure (core/api/models/schemas/services/repositories)
-- [ ] Env, DB, logging, settings config
-- [ ] SQLAlchemy models + session + repository pattern + transactions
-- [ ] Standard error handling
+### Phase 3 — Backend Foundation ✅
+- [x] App structure (core/api/models/schemas/services/repositories)
+- [x] Env, DB, logging, settings config
+- [x] SQLAlchemy models + session + repository pattern + transactions
+- [x] Standard error handling
 - **DoD:** FastAPI ⇄ PostgreSQL round-trip with reliable responses.
 
 ### Phase 4 — Real-Time Simulator (data source; NOT the product)
