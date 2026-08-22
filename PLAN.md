@@ -278,11 +278,11 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Quarantine / dead-letter for invalid events
 - **DoD:** Thousands of simulated events ingested reliably, no duplicates.
 
-### Phase 6 — Canonical Data Layer
-- [ ] Normalization framework (`base.py`, `github.py`, `gitlab.py`, `jira.py`, `simulator.py`)
-- [ ] Provider→canonical mappings (PR/MR → `CHANGE_CREATED`, review → `REVIEW_COMPLETED`, …)
-- [ ] Canonical entity creation + relationship resolution (Team→Repo→Change→Review→Build→Deploy→Incident)
-- [ ] `actor_ref` handling (internal only)
+### Phase 6 — Canonical Data Layer ✅
+- [x] Normalization framework (`base.py`, `github.py`, `gitlab.py`, `jira.py`, `simulator.py`)
+- [x] Provider→canonical mappings (PR/MR → `CHANGE_CREATED`, review → `REVIEW_COMPLETED`, …)
+- [x] Canonical entity creation + relationship resolution (Team→Repo→Change→Review→Build→Deploy→Incident)
+- [x] `actor_ref` handling (internal only)
 - **DoD:** Different provider-shaped events converge to the same canonical model.
 
 ### Phase 7 — Analytics / Metric Engine

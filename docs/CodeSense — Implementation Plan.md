@@ -531,7 +531,7 @@ The simulator can send thousands of events through the ingestion API and all val
 
 ---
 
-# Phase 6 — Canonical Data Layer
+# Phase 6 — Canonical Data Layer ✅
 
 ## Objective
 
