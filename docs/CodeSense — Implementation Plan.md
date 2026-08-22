@@ -165,7 +165,7 @@ The backend starts successfully with a basic health endpoint.
 
 ---
 
-# Phase 2 — Database Foundation
+# Phase 2 — Database Foundation ✅
 
 ## Objective
 
@@ -175,10 +175,10 @@ Implement the PostgreSQL database architecture.
 
 ### 2.1 PostgreSQL
 
-- [ ] Start PostgreSQL.
-- [ ] Create CodeSense database.
-- [ ] Configure database connection.
-- [ ] Test connection from Python.
+- [x] Start PostgreSQL.
+- [x] Create CodeSense database.
+- [x] Configure database connection.
+- [x] Test connection from Python.
 
 ### 2.2 Database Schemas
 
@@ -234,10 +234,10 @@ insights
 
 ### 2.6 Database Migrations
 
-- [ ] Configure Alembic.
-- [ ] Create initial migration.
-- [ ] Test migration.
-- [ ] Test rollback.
+- [x] Configure Alembic.
+- [x] Create initial migration.
+- [x] Test migration.
+- [x] Test rollback.
 
 ### 2.7 Indexes
 

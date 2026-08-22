@@ -248,11 +248,11 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] `.env.example`, `.gitignore`, `README.md`
 - **DoD:** Backend starts with working `GET /api/v1/health`.
 
-### Phase 2 — Database Foundation
-- [ ] PostgreSQL up; create `codesense` DB
-- [ ] Create schemas (`raw`, `core`, `analytics`, `configuration`, `audit`) + all tables
-- [ ] Alembic initial migration; verify migrate **and** rollback
-- [ ] Add required indexes
+### Phase 2 — Database Foundation ✅
+- [x] PostgreSQL up; create `codesense` DB
+- [x] Create schemas (`raw`, `core`, `analytics`, `configuration`, `audit`) + all tables
+- [x] Alembic initial migration; verify migrate **and** rollback
+- [x] Add required indexes
 - **DoD:** Full schema created from a clean DB via migrations only.
 
 ### Phase 3 — Backend Foundation

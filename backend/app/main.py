@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.settings import settings
-from app.api.endpoints import health
+try:
+    from backend.app.core.settings import settings
+    from backend.app.api.endpoints import health
+except ImportError:
+    from app.core.settings import settings
+    from app.api.endpoints import health
 
 app = FastAPI(
     title=settings.APP_NAME,
