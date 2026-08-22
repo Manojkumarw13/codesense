@@ -262,12 +262,12 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Standard error handling
 - **DoD:** FastAPI ⇄ PostgreSQL round-trip with reliable responses.
 
-### Phase 4 — Real-Time Simulator (data source; NOT the product)
-- [ ] Entity generators: orgs, teams, repos, projects, work_items, changes, reviews, builds, deployments, incidents
-- [ ] Event generators for all canonical events
-- [ ] Scenarios (sequential): NORMAL → HIGH_LOAD → REVIEW_BOTTLENECK → CI_BOTTLENECK → DEPLOYMENT_FAILURE → INCIDENT_SPIKE → RECOVERY
-- [ ] Controls: START / STOP / PAUSE / RESUME / STATUS / SCENARIO
-- [ ] Deterministic when seeded; realistic timestamps; **sends through the real ingestion API** (never bypasses pipeline)
+### Phase 4 — Real-Time Simulator (data source; NOT the product) ✅
+- [x] Entity generators: orgs, teams, repos, projects, work_items, changes, reviews, builds, deployments, incidents
+- [x] Event generators for all canonical events
+- [x] Scenarios (sequential): NORMAL → HIGH_LOAD → REVIEW_BOTTLENECK → CI_BOTTLENECK → DEPLOYMENT_FAILURE → INCIDENT_SPIKE → RECOVERY
+- [x] Controls: START / STOP / PAUSE / RESUME / STATUS / SCENARIO
+- [x] Deterministic when seeded; realistic timestamps; **sends through the real ingestion API** (never bypasses pipeline)
 - **DoD:** Simulator streams realistic, correlated events continuously.
 
 ### Phase 5 — Ingestion Pipeline
