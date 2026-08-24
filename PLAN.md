@@ -291,11 +291,11 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Time aggregations + baselines + % change
 - **DoD:** All MVP metrics compute correctly from canonical events.
 
-### Phase 8 — Engineering Health Score
-- [ ] 6 dimensions, normalization to 0–100, configurable weights
-- [ ] Weighted overall score
-- [ ] Explainability (Score→Dimension→Metric→Evidence)
-- [ ] Historical score + change
+### Phase 8 — Engineering Health Score ✅
+- [x] 6 dimensions, normalization to 0–100, configurable weights
+- [x] Weighted overall score
+- [x] Explainability (Score→Dimension→Metric→Evidence)
+- [x] Historical score + change
 - **DoD:** Reproducible, explainable, team-level score.
 
 ### Phase 9 — Bottleneck & Anomaly Detection
