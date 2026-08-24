@@ -285,10 +285,10 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] `actor_ref` handling (internal only)
 - **DoD:** Different provider-shaped events converge to the same canonical model.
 
-### Phase 7 — Analytics / Metric Engine
-- [ ] Generic metric framework (definition → query → calc → aggregate → `metric_values`)
-- [ ] Delivery → Development → CI/CD → Reliability metrics (12 above)
-- [ ] Time aggregations + baselines + % change
+### Phase 7 — Analytics / Metric Engine ✅
+- [x] Generic metric framework (definition → query → calc → aggregate → `metric_values`)
+- [x] Delivery → Development → CI/CD → Reliability metrics (12 above)
+- [x] Time aggregations + baselines + % change
 - **DoD:** All MVP metrics compute correctly from canonical events.
 
 ### Phase 8 — Engineering Health Score
