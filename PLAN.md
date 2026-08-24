@@ -304,9 +304,9 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Severity (LOW/MEDIUM/HIGH/CRITICAL) + evidence stored with each detection
 - **DoD:** Simulator bottleneck scenarios automatically produce the expected detections.
 
-### Phase 10 — Insights Engine
-- [ ] Rule-based insights (e.g., backlog ↑ + turnaround ↑ ⇒ “Review flow is becoming a bottleneck”)
-- [ ] Insight structure + lifecycle (Detected→Active→Reviewed→Resolved→Archived)
+### Phase 10 — Insights Engine ✅
+- [x] Rule-based insights (e.g., backlog ↑ + turnaround ↑ ⇒ “Review flow is becoming a bottleneck”)
+- [x] Insight structure + lifecycle (Detected→Active→Reviewed→Resolved→Archived)
 - **DoD:** CodeSense auto-explains significant changes via deterministic rules.
 
 ### Phase 11 — Frontend Foundation
