@@ -36,7 +36,7 @@ class DetectionEngine:
             return []
 
         # Get current period metrics
-        current_metrics = self.db.query(MetricValue).join(MetricDefinition).filter(
+        current_metrics = self.db.query(MetricValue).filter(
             MetricValue.team_id == team_id,
             MetricValue.period_start == period_start,
             MetricValue.period_end == period_end
@@ -46,8 +46,9 @@ class DetectionEngine:
         now = datetime.now(timezone.utc)
 
         for val in current_metrics:
-            if not val.metric:
-                val.metric = self.db.query(MetricDefinition).get(val.metric_id)
+            metric = self.db.query(MetricDefinition).get(val.metric_id)
+            if not metric:
+                continue
             
             # Fetch historical data (e.g., last 30 periods)
             history = self.db.query(MetricValue).filter(
@@ -70,7 +71,7 @@ class DetectionEngine:
                         observed_value=val.value,
                         change_percent=val.change_percentage,
                         confidence=0.5, # low confidence due to lack of history
-                        evidence={"reason": "High percentage change compared to previous period", "metric_key": val.metric.metric_key},
+                        evidence={"reason": "High percentage change compared to previous period", "metric_key": metric.metric_key},
                         detected_at=now
                     )
                     self.db.add(anomaly)
@@ -110,7 +111,7 @@ class DetectionEngine:
                     observed_value=val.value,
                     change_percent=change_pct,
                     confidence=min(0.95, 0.5 + (len(history) / 60.0)), # higher confidence with more history
-                    evidence={"z_score": z_score, "mean": mean, "std_dev": std_dev, "history_size": len(history), "metric_key": val.metric.metric_key},
+                    evidence={"z_score": z_score, "mean": mean, "std_dev": std_dev, "history_size": len(history), "metric_key": metric.metric_key},
                     detected_at=now
                 )
                 self.db.add(anomaly)
@@ -125,7 +126,7 @@ class DetectionEngine:
             return []
 
         # We need recent metrics to evaluate bottleneck rules
-        metrics = self.db.query(MetricValue).join(MetricDefinition).filter(
+        metrics = self.db.query(MetricValue).filter(
             MetricValue.team_id == team_id,
             MetricValue.period_start == period_start,
             MetricValue.period_end == period_end
@@ -133,10 +134,9 @@ class DetectionEngine:
 
         val_map = {}
         for m in metrics:
-            if not m.metric:
-                 m.metric = self.db.query(MetricDefinition).get(m.metric_id)
-            if m.metric:
-                 val_map[m.metric.metric_key] = m
+            metric = self.db.query(MetricDefinition).get(m.metric_id)
+            if metric:
+                 val_map[metric.metric_key] = m
 
         def is_increasing(metric_key: str, threshold: float = 10.0) -> bool:
             """Check if a metric is increasing significantly (> threshold%)."""
@@ -232,4 +232,3 @@ class DetectionEngine:
             
         self.db.commit()
         return detected_bottlenecks
-
