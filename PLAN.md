@@ -298,10 +298,10 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Historical score + change
 - **DoD:** Reproducible, explainable, team-level score.
 
-### Phase 9 — Bottleneck & Anomaly Detection
-- [ ] Review / CI / Deployment / Workflow bottleneck detection (rule conditions above)
-- [ ] Anomaly detection: rolling averages, % change, Z-score, baseline comparison
-- [ ] Severity (LOW/MEDIUM/HIGH/CRITICAL) + evidence stored with each detection
+### Phase 9 — Bottleneck & Anomaly Detection ✅
+- [x] Review / CI / Deployment / Workflow bottleneck detection (rule conditions above)
+- [x] Anomaly detection: rolling averages, % change, Z-score, baseline comparison
+- [x] Severity (LOW/MEDIUM/HIGH/CRITICAL) + evidence stored with each detection
 - **DoD:** Simulator bottleneck scenarios automatically produce the expected detections.
 
 ### Phase 10 — Insights Engine
