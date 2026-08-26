@@ -68,3 +68,22 @@ class SystemSetting(Base):
     setting_value = Column(JSONB, nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+
+
+class ModelRegistry(Base):
+    __tablename__ = "model_registry"
+    __table_args__ = {"schema": "configuration"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_name = Column(String(100), nullable=False)
+    version = Column(String(50), nullable=False)
+    model_type = Column(String(50), nullable=False)
+    description = Column(String(255), nullable=True)
+    file_path = Column(String(255), nullable=False)
+    hyperparameters = Column(JSONB, nullable=False, server_default="{}")
+    metrics = Column(JSONB, nullable=False, server_default="{}")
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("core.organizations.id", ondelete="CASCADE"), nullable=True)
+    team_id = Column(UUID(as_uuid=True), ForeignKey("core.teams.id", ondelete="CASCADE"), nullable=True)
+    is_active = Column(Boolean, nullable=False, server_default=text("true"))
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+

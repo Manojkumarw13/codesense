@@ -44,6 +44,7 @@ from backend.app.models.configuration import (
     ConnectorConfig,
     HealthScoreConfig,
     SystemSetting,
+    ModelRegistry,
 )
 
 # ML schema
@@ -89,6 +90,7 @@ __all__ = [
     "ConnectorConfig",
     "HealthScoreConfig",
     "SystemSetting",
+    "ModelRegistry",
     "AuditLog",
     "DataProcessingJob",
     "MLFeatureVector",

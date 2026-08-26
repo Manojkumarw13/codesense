@@ -340,9 +340,9 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Setup `ml/features/` store.
 - **DoD:** ML features extracted automatically per period.
 
-### Phase 12 — Model Training & Registry
-- [ ] Train global models with Org/Team adaptation (strictly no individual modeling).
-- [ ] Register in `configuration.model_registry`.
+### Phase 12 — Model Training & Registry ✅
+- [x] Train global models with Org/Team adaptation (strictly no individual modeling).
+- [x] Register in `configuration.model_registry`.
 - **DoD:** Trained ML models stored and versioned.
 
 ### Phase 13 — Risk Prediction
