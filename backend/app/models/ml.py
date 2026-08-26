@@ -1,4 +1,5 @@
 import uuid
+
 from sqlalchemy import (
     Column,
     DateTime,
@@ -6,8 +7,10 @@ from sqlalchemy import (
     Index,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 from backend.app.models.base import Base
+
 
 class MLFeatureVector(Base):
     __tablename__ = "ml_feature_vectors"

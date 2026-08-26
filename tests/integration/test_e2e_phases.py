@@ -1,20 +1,24 @@
 import uuid
-import pytest
 from datetime import datetime, timedelta, timezone
 
-from backend.app.core.database import SessionLocal
-from backend.app.models.core import Team, Organization, CanonicalEvent
-from backend.app.models.raw import ProviderEvent
-from backend.app.models.analytics import MetricValue, HealthScore, Bottleneck, Anomaly, Insight
-from simulator.main import tick_simulation, send_events_to_backend, state
-from backend.app.services.processing import EventProcessor
-from backend.app.services.metrics import MetricEngine
-from backend.app.services.health import HealthScoreEngine
-from backend.app.services.detection import DetectionEngine
-from backend.app.services.insights import InsightsEngine
-
+import pytest
 from fastapi.testclient import TestClient
+
+from backend.app.core.database import SessionLocal
 from backend.app.main import app as backend_app
+from backend.app.models.analytics import (
+    Anomaly,
+    Bottleneck,
+    Insight,
+)
+from backend.app.models.core import CanonicalEvent, Organization, Team
+from backend.app.models.raw import ProviderEvent
+from backend.app.services.detection import DetectionEngine
+from backend.app.services.health import HealthScoreEngine
+from backend.app.services.insights import InsightsEngine
+from backend.app.services.metrics import MetricEngine
+from backend.app.services.processing import EventProcessor
+from simulator.main import send_events_to_backend, state, tick_simulation
 
 backend_client = TestClient(backend_app)
 

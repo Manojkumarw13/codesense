@@ -1,13 +1,13 @@
 """Feature pipeline for ML modeling."""
 import logging
-from datetime import datetime, timezone, timedelta
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from typing import Dict, Any
+from datetime import datetime, timezone
+from typing import Any
 
-from backend.app.models.ml import MLFeatureVector
-from backend.app.models.analytics import MetricValue, HealthScore
+from sqlalchemy.orm import Session
+
+from backend.app.models.analytics import HealthScore, MetricValue
 from backend.app.models.core import Team
+from backend.app.models.ml import MLFeatureVector
 
 logger = logging.getLogger("codesense.ml.features")
 
@@ -17,7 +17,7 @@ class FeatureExtractor:
     def __init__(self, db: Session):
         self.db = db
 
-    def extract_team_features(self, team_id: str, period_start: datetime, period_end: datetime) -> Dict[str, Any]:
+    def extract_team_features(self, team_id: str, period_start: datetime, period_end: datetime) -> dict[str, Any]:
         """Extract features for a specific team and period."""
         # Query metrics
         from backend.app.models.analytics import MetricDefinition

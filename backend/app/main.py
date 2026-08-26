@@ -1,16 +1,19 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import logging
-from backend.app.core.settings import settings
-from backend.app.api.endpoints import health, events, metrics as metrics_endpoint, risk
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from backend.app.api.endpoints import events, health, risk
+from backend.app.api.endpoints import metrics as metrics_endpoint
+from backend.app.core.database import SessionLocal
+from backend.app.core.exceptions import register_exception_handlers
 from backend.app.core.logging import setup_logging
 from backend.app.core.middleware import RequestIDMiddleware
-from backend.app.core.exceptions import register_exception_handlers
-from backend.app.core.database import SessionLocal
-from backend.app.services.processing import EventProcessor
 from backend.app.core.observability import PrometheusMiddleware, setup_tracing
 from backend.app.core.redis import get_redis_client
+from backend.app.core.settings import settings
+from backend.app.services.processing import EventProcessor
 
 # Initialize logging
 setup_logging()

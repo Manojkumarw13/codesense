@@ -1,10 +1,12 @@
 """Risk Prediction Module."""
-from datetime import datetime, timezone
 import uuid
-from typing import Dict, Any, List
+from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy.orm import Session
+
 from backend.app.models.ml import MLFeatureVector
+
 
 class RiskPredictor:
     """Predicts risk of deployment failures and incident spikes using ML features."""
@@ -12,7 +14,7 @@ class RiskPredictor:
     def __init__(self, db: Session):
         self.db = db
 
-    def predict_team_risk(self, team_id: uuid.UUID) -> Dict[str, Any]:
+    def predict_team_risk(self, team_id: uuid.UUID) -> dict[str, Any]:
         """Predict deployment failure and incident spike risk for a given team."""
         # Get latest ML feature vector for team
         latest_vector = self.db.query(MLFeatureVector).filter(

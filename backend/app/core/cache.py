@@ -6,7 +6,7 @@ Must not break when Redis is down (offline mode).
 import json
 import logging
 import time
-from typing import Any, Optional
+from typing import Any
 
 from backend.app.core.redis import get_redis_client
 from backend.app.core.settings import settings
@@ -14,7 +14,7 @@ from backend.app.core.settings import settings
 logger = logging.getLogger("codesense.cache")
 
 # In-memory fallback store: key -> (value_json, expires_at)
-_memory_store: dict[str, tuple[str, Optional[float]]] = {}
+_memory_store: dict[str, tuple[str, float | None]] = {}
 
 
 def _serialize(value: Any) -> str:
@@ -31,7 +31,7 @@ def _deserialize(raw: str) -> Any:
         return raw
 
 
-def cache_get(key: str) -> Optional[Any]:
+def cache_get(key: str) -> Any | None:
     client = get_redis_client()
     if client is not None:
         try:
@@ -52,7 +52,7 @@ def cache_get(key: str) -> Optional[Any]:
     return _deserialize(val)
 
 
-def cache_set(key: str, value: Any, ttl: Optional[int] = None) -> bool:
+def cache_set(key: str, value: Any, ttl: int | None = None) -> bool:
     ttl = ttl if ttl is not None else settings.CACHE_TTL_SECONDS
     payload = _serialize(value)
     client = get_redis_client()

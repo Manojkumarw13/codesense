@@ -1,7 +1,8 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
-from uuid import UUID
+from typing import Any, Generic, TypeVar
+
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
 from backend.app.models.base import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -11,15 +12,15 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     """Generic base class for SQLAlchemy Repositories."""
-    def __init__(self, model: Type[ModelType]) -> None:
+    def __init__(self, model: type[ModelType]) -> None:
         self.model = model
 
-    def get(self, db: Session, id: Any) -> Optional[ModelType]:
+    def get(self, db: Session, id: Any) -> ModelType | None:
         return db.query(self.model).filter(self.model.id == id).first() # type: ignore
 
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100
-    ) -> List[ModelType]:
+    ) -> list[ModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
@@ -35,7 +36,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db: Session,
         *,
         db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+        obj_in: UpdateSchemaType | dict[str, Any]
     ) -> ModelType:
         obj_data = db_obj.__dict__
         if isinstance(obj_in, dict):
@@ -52,7 +53,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db.refresh(db_obj)
         return db_obj
 
-    def remove(self, db: Session, *, id: Any) -> Optional[ModelType]:
+    def remove(self, db: Session, *, id: Any) -> ModelType | None:
         obj = db.query(self.model).get(id)
         if obj:
             db.delete(obj)

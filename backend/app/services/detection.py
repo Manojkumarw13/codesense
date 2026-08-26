@@ -1,18 +1,19 @@
-import uuid
 import logging
 import math
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
+import uuid
+from datetime import datetime, timezone
+from typing import Any
 
-from backend.app.models.core import Team
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
 from backend.app.models.analytics import (
-    MetricValue,
-    MetricDefinition,
     Anomaly,
-    Bottleneck
+    Bottleneck,
+    MetricDefinition,
+    MetricValue,
 )
+from backend.app.models.core import Team
 
 logger = logging.getLogger("codesense.detection")
 
@@ -20,7 +21,7 @@ class DetectionEngine:
     def __init__(self, db: Session):
         self.db = db
 
-    def run_detection_for_period(self, team_id: uuid.UUID, period_start: datetime, period_end: datetime) -> Dict[str, Any]:
+    def run_detection_for_period(self, team_id: uuid.UUID, period_start: datetime, period_end: datetime) -> dict[str, Any]:
         """Run both anomaly and bottleneck detection for a specific team and time period."""
         anomalies = self.detect_anomalies(team_id, period_start, period_end)
         bottlenecks = self.detect_bottlenecks(team_id, period_start, period_end)
@@ -30,7 +31,7 @@ class DetectionEngine:
             "bottlenecks_detected": len(bottlenecks)
         }
 
-    def detect_anomalies(self, team_id: uuid.UUID, period_start: datetime, period_end: datetime) -> List[Anomaly]:
+    def detect_anomalies(self, team_id: uuid.UUID, period_start: datetime, period_end: datetime) -> list[Anomaly]:
         team = self.db.query(Team).get(team_id)
         if not team:
             return []
@@ -120,7 +121,7 @@ class DetectionEngine:
         self.db.commit()
         return detected_anomalies
 
-    def detect_bottlenecks(self, team_id: uuid.UUID, period_start: datetime, period_end: datetime) -> List[Bottleneck]:
+    def detect_bottlenecks(self, team_id: uuid.UUID, period_start: datetime, period_end: datetime) -> list[Bottleneck]:
         team = self.db.query(Team).get(team_id)
         if not team:
             return []

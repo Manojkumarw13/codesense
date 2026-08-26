@@ -1,5 +1,6 @@
-from typing import Optional
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     APP_NAME: str = "CodeSense"
@@ -12,12 +13,12 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "codesense"
     POSTGRES_PORT: str = "5432"
-    DATABASE_URL: Optional[str] = None
+    DATABASE_URL: str | None = None
 
     # AI Settings (Optional for MVP)
-    OPENROUTER_API_KEY: Optional[str] = None
-    LLM_MODEL: Optional[str] = "google/antigravity-gemini-3.5-flash"
-    AI_GATEWAY_URL: Optional[str] = None
+    OPENROUTER_API_KEY: str | None = None
+    LLM_MODEL: str | None = "google/antigravity-gemini-3.5-flash"
+    AI_GATEWAY_URL: str | None = None
     
     # ML Settings
     ML_MODELS_PATH: str = "ml_models"
@@ -29,14 +30,14 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
-    REDIS_PASSWORD: Optional[str] = None
-    REDIS_URL: Optional[str] = None
+    REDIS_PASSWORD: str | None = None
+    REDIS_URL: str | None = None
     CACHE_TTL_SECONDS: int = 300
     ENABLE_REDIS: bool = True
 
     # Celery / Worker Settings
-    CELERY_BROKER_URL: Optional[str] = None
-    CELERY_RESULT_BACKEND: Optional[str] = None
+    CELERY_BROKER_URL: str | None = None
+    CELERY_RESULT_BACKEND: str | None = None
     ENABLE_WORKER: bool = True
     WORKER_CONCURRENCY: int = 2
 
@@ -44,7 +45,7 @@ class Settings(BaseSettings):
     ENABLE_METRICS: bool = True
     ENABLE_TRACING: bool = True
     PROMETHEUS_PORT: int = 9090
-    OTEL_EXPORTER_OTLP_ENDPOINT: Optional[str] = None
+    OTEL_EXPORTER_OTLP_ENDPOINT: str | None = None
 
     @property
     def REDIS_URI(self) -> str:

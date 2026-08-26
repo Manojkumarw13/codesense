@@ -1,12 +1,11 @@
 import logging
-from typing import Optional
 
 from backend.app.core.settings import settings
 
 logger = logging.getLogger("codesense.redis")
 
-_client: Optional[object] = None
-_available: Optional[bool] = None
+_client: object | None = None
+_available: bool | None = None
 
 
 def get_redis_client():

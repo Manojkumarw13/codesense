@@ -1,20 +1,22 @@
 import hashlib
 import json
 import logging
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Depends, status, Query
-from sqlalchemy.orm import Session
+from typing import Any
+
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from backend.app.core.database import get_db
+from backend.app.core.exceptions import ConflictError
 from backend.app.models.raw import ProviderEvent
-from backend.app.schemas.event import ProviderEventCreate, ProviderEventResponse
-from backend.app.core.exceptions import ConflictError, ValidationError
+from backend.app.schemas.event import ProviderEventCreate
 
 router = APIRouter()
 logger = logging.getLogger("codesense.ingestion")
 quarantine_logger = logging.getLogger("codesense.quarantine")
 
-def compute_payload_hash(payload: Dict[str, Any]) -> str:
+def compute_payload_hash(payload: dict[str, Any]) -> str:
     """Computes SHA-256 hash of the sorted JSON payload."""
     serialized = json.dumps(payload, sort_keys=True)
     return hashlib.sha256(serialized.encode()).hexdigest()
@@ -77,19 +79,19 @@ def ingest_event(event_in: ProviderEventCreate, db: Session = Depends(get_db)):
                 "provider": existing.provider,
                 "external_event_id": existing.external_event_id
             }
-        raise ConflictError(message=f"Integrity violation during ingestion: {str(e)}")
+        raise ConflictError(message=f"Integrity violation during ingestion: {e!s}")
         
     except Exception as e:
         db.rollback()
         # Log to quarantine
         quarantine_logger.error(
-            f"Failed to ingest event: {event_in.model_dump_json()} - Error: {str(e)}"
+            f"Failed to ingest event: {event_in.model_dump_json()} - Error: {e!s}"
         )
         raise e
 
 
 @router.post("/events/batch", status_code=status.HTTP_201_CREATED)
-def ingest_events_batch(events_in: List[ProviderEventCreate], db: Session = Depends(get_db)):
+def ingest_events_batch(events_in: list[ProviderEventCreate], db: Session = Depends(get_db)):
     """Ingests a batch of raw provider events."""
     results = []
     
@@ -158,7 +160,7 @@ def ingest_events_batch(events_in: List[ProviderEventCreate], db: Session = Depe
         except Exception as e:
             db.rollback()
             quarantine_logger.error(
-                f"Failed to ingest event in batch: {event_in.model_dump_json()} - Error: {str(e)}"
+                f"Failed to ingest event in batch: {event_in.model_dump_json()} - Error: {e!s}"
             )
             results.append({
                 "status": "failed",
@@ -172,9 +174,9 @@ def ingest_events_batch(events_in: List[ProviderEventCreate], db: Session = Depe
 
 @router.get("/events")
 def list_raw_events(
-    provider: Optional[str] = Query(None, description="Filter by provider"),
-    event_type: Optional[str] = Query(None, description="Filter by event type"),
-    processing_status: Optional[str] = Query(None, description="Filter by processing status"),
+    provider: str | None = Query(None, description="Filter by provider"),
+    event_type: str | None = Query(None, description="Filter by event type"),
+    processing_status: str | None = Query(None, description="Filter by processing status"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db)

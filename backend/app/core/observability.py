@@ -7,15 +7,18 @@ Provides:
 """
 import logging
 import time
-from typing import Optional
-
-from fastapi import Request, Response
 
 logger = logging.getLogger("codesense.observability")
 
 # Prometheus metrics – try to import, else stub
 try:
-    from prometheus_client import Counter, Histogram, Gauge, REGISTRY, generate_latest, CONTENT_TYPE_LATEST  # type: ignore
+    from prometheus_client import (  # type: ignore
+        CONTENT_TYPE_LATEST,
+        REGISTRY,
+        Counter,
+        Histogram,
+        generate_latest,
+    )
 
     REQUEST_COUNT = Counter(
         "codesense_http_requests_total",
@@ -72,7 +75,7 @@ except Exception as exc:  # noqa: BLE001
     def metrics_response():  # type: ignore[no-untyped-def]
         from fastapi.responses import JSONResponse
 
-        return JSONResponse({"status": "metrics_disabled", "reason": str(exc)})
+        return JSONResponse({"status": "metrics_disabled", "reason": "not available"})
 
 
 # OpenTelemetry – optional no-op
@@ -85,7 +88,10 @@ def setup_tracing(service_name: str = "codesense-api"):
     try:
         from opentelemetry import trace  # type: ignore
         from opentelemetry.sdk.trace import TracerProvider  # type: ignore
-        from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter  # type: ignore
+        from opentelemetry.sdk.trace.export import (  # type: ignore
+            ConsoleSpanExporter,
+            SimpleSpanProcessor,
+        )
 
         provider = TracerProvider()
         provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
@@ -97,8 +103,12 @@ def setup_tracing(service_name: str = "codesense-api"):
 
         if settings.OTEL_EXPORTER_OTLP_ENDPOINT:
             try:
-                from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter  # type: ignore
-                from opentelemetry.sdk.trace.export import BatchSpanProcessor  # type: ignore
+                from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+                    OTLPSpanExporter,  # type: ignore
+                )
+                from opentelemetry.sdk.trace.export import (
+                    BatchSpanProcessor,  # type: ignore
+                )
 
                 otlp_exporter = OTLPSpanExporter(endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT)
                 provider.add_span_processor(BatchSpanProcessor(otlp_exporter))

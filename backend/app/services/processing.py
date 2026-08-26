@@ -1,13 +1,13 @@
 import logging
 from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+
 from backend.app.models.raw import ProviderEvent
-from backend.app.normalization.simulator import SimulatorNormalizer
 from backend.app.normalization.github import GitHubNormalizer
 from backend.app.normalization.gitlab import GitLabNormalizer
 from backend.app.normalization.jira import JiraNormalizer
-from backend.app.core.exceptions import DatabaseError
+from backend.app.normalization.simulator import SimulatorNormalizer
 
 logger = logging.getLogger("codesense.processing")
 
@@ -65,7 +65,7 @@ class EventProcessor:
                 
             except Exception as e:
                 self.db.rollback()
-                logger.exception(f"Failed to normalize raw event {event.id} from {provider}: {str(e)}")
+                logger.exception(f"Failed to normalize raw event {event.id} from {provider}: {e!s}")
                 
                 # Mark as FAILED
                 event.processing_status = "FAILED"

@@ -1,9 +1,17 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any
+
 from sqlalchemy.orm import Session
+
+from backend.app.models.core import (
+    CanonicalEvent,
+    Organization,
+    Project,
+    Repository,
+    Team,
+)
 from backend.app.models.raw import ProviderEvent
-from backend.app.models.core import Organization, Team, Project, Repository, CanonicalEvent
 
 logger = logging.getLogger("codesense.normalization")
 
@@ -15,7 +23,6 @@ class BaseNormalizer(ABC):
     @abstractmethod
     def normalize(self, raw_event: ProviderEvent) -> None:
         """Processes a raw event, resolving entities and creating canonical events."""
-        pass
 
     def get_or_create_organization(self, external_id: str, name: str) -> Organization:
         """Helper to resolve or create an Organization by external ID."""
@@ -57,7 +64,7 @@ class BaseNormalizer(ABC):
             self.db.flush()
         return project
 
-    def get_or_create_repository(self, team_id: Any, project_id: Optional[Any], provider: str, external_id: str, name: str) -> Repository:
+    def get_or_create_repository(self, team_id: Any, project_id: Any | None, provider: str, external_id: str, name: str) -> Repository:
         """Helper to resolve or create a Repository by external ID."""
         repo = self.db.query(Repository).filter_by(provider=provider, external_id=external_id).first()
         if not repo:
@@ -76,15 +83,15 @@ class BaseNormalizer(ABC):
         self,
         raw_event: ProviderEvent,
         org_id: Any,
-        team_id: Optional[Any],
-        project_id: Optional[Any],
-        repo_id: Optional[Any],
+        team_id: Any | None,
+        project_id: Any | None,
+        repo_id: Any | None,
         event_type: str,
         occurred_at: Any,
-        actor_ref: Optional[str] = None,
-        entity_type: Optional[str] = None,
-        entity_id: Optional[Any] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        actor_ref: str | None = None,
+        entity_type: str | None = None,
+        entity_id: Any | None = None,
+        metadata: dict[str, Any] | None = None
     ) -> CanonicalEvent:
         """Helper to create and save a CanonicalEvent."""
         canonical_event = CanonicalEvent(

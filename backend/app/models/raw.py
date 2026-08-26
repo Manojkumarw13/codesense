@@ -1,7 +1,10 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Index, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+
+from sqlalchemy import Column, DateTime, Index, String, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 from backend.app.models.base import Base
+
 
 class ProviderEvent(Base):
     __tablename__ = "provider_events"

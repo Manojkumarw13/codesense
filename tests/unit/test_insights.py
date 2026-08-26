@@ -1,10 +1,11 @@
 import uuid
-import pytest
 from datetime import datetime, timedelta, timezone
-from backend.app.services.insights import InsightsEngine
-from backend.app.models.core import Team, Organization
-from backend.app.models.analytics import Anomaly, Bottleneck, Insight, MetricDefinition
+
 from backend.app.core.database import SessionLocal
+from backend.app.models.analytics import Anomaly, Bottleneck, MetricDefinition
+from backend.app.models.core import Organization, Team
+from backend.app.services.insights import InsightsEngine
+
 
 def test_insights_generation_and_lifecycle():
     db = SessionLocal()
@@ -36,13 +37,13 @@ def test_insights_generation_and_lifecycle():
         db.add(b)
         
         # Add metric definition for anomaly
-        md = MetricDefinition(id=uuid.uuid4(), metric_key="test_metric", name="Test Metric")
+        metric_key = f"test_metric_{uuid.uuid4().hex[:8]}"
+        md = MetricDefinition(id=uuid.uuid4(), metric_key=metric_key, name="Test Metric")
         db.add(md)
         db.commit()
         
         # Add anomaly
         a = Anomaly(
-            id=uuid.uuid4(),
             organization_id=org_id,
             team_id=team_id,
             metric_id=md.id,

@@ -1,11 +1,11 @@
 import uuid
-import pytest
 from datetime import datetime, timedelta, timezone
+
+from backend.app.core.database import SessionLocal
+from backend.app.models.analytics import MetricDefinition, MetricValue
+from backend.app.models.core import Organization, Team
 from backend.app.services.health import HealthScoreEngine
-from backend.app.models.core import Team, Organization
-from backend.app.models.analytics import MetricValue, MetricDefinition, HealthScore
-from backend.app.core.database import SessionLocal, engine
-from backend.app.models.base import Base
+
 
 def test_engineering_health_score():
     db = SessionLocal()
@@ -23,14 +23,16 @@ def test_engineering_health_score():
         # Add metric definitions
         defs = []
         for key in ["deployment_frequency", "build_success_rate"]:
-            dfn = MetricDefinition(
-                id=uuid.uuid4(),
-                metric_key=key,
-                name=key.replace("_", " "),
-            )
-            db.add(dfn)
+            dfn = db.query(MetricDefinition).filter_by(metric_key=key).first()
+            if not dfn:
+                dfn = MetricDefinition(
+                    id=uuid.uuid4(),
+                    metric_key=key,
+                    name=key.replace("_", " "),
+                )
+                db.add(dfn)
+                db.commit()
             defs.append(dfn)
-        db.commit()
         
         now = datetime.now(timezone.utc)
         start = now - timedelta(days=7)

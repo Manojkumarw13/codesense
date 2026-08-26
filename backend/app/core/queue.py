@@ -6,7 +6,8 @@ and degrade gracefully when Redis/Celery not available.
 import asyncio
 import inspect
 import logging
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from backend.app.core.settings import settings
 
@@ -16,7 +17,7 @@ logger = logging.getLogger("codesense.queue")
 _fallback_queue: asyncio.Queue = asyncio.Queue()
 
 
-def enqueue_job(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Optional[str]:
+def enqueue_job(func: Callable[..., Any], *args: Any, **kwargs: Any) -> str | None:
     """Try to enqueue via Celery; fallback to asyncio queue.
 
     Returns job id if Celery used, else 'fallback-<id>'.
@@ -24,7 +25,6 @@ def enqueue_job(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Optional
     """
     if settings.ENABLE_WORKER:
         try:
-            from backend.app.worker.celery_app import celery_app
 
             # Check if celery broker is configured and task is registered
             task_name = getattr(func, "name", None) or f"{func.__module__}.{func.__name__}"

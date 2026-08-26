@@ -7,10 +7,10 @@ Provides:
 """
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
 
-from backend.app.core.cache import cache_get, cache_set
+from backend.app.core.cache import cache_set
 
 logger = logging.getLogger("codesense.worker.base")
 
@@ -19,7 +19,7 @@ logger = logging.getLogger("codesense.worker.base")
 class WorkerStats:
     jobs_processed: int = 0
     jobs_failed: int = 0
-    last_run_at: Optional[str] = None
+    last_run_at: str | None = None
     last_duration_ms: float = 0.0
     is_healthy: bool = True
 
@@ -69,7 +69,7 @@ def run_once(job: Callable[[], int], job_name: str = "worker_job") -> int:
             pass
         logger.info(f"[{job_name}] processed {count} items in {duration_ms:.1f}ms")
         return count
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         record_failure()
         logger.exception(f"[{job_name}] failed: {exc}")
         return 0

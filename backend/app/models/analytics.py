@@ -1,19 +1,22 @@
 import uuid
+
 from sqlalchemy import (
-    Column,
-    String,
-    Text,
     Boolean,
-    Float,
+    Column,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Index,
+    String,
+    Text,
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 from backend.app.models.base import Base
+
 
 class MetricDefinition(Base):
     __tablename__ = "metric_definitions"

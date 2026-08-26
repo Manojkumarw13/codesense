@@ -6,8 +6,6 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from backend.app.core.settings import settings
-
 logger = logging.getLogger("codesense.worker.tasks")
 
 # Import celery_app lazily to avoid circular when celery not installed
@@ -32,7 +30,6 @@ def _get_task_decorator():
             def delay(*a, **kw):  # type: ignore[no-untyped-def]
                 try:
                     # enqueue for later execution via queue abstraction
-                    from backend.app.core.queue import enqueue_job as _eq  # noqa: WPS433
 
                     # avoid infinite recursion: call function directly via fallback
                     # if we are already in fallback path, execute inline
@@ -41,7 +38,7 @@ def _get_task_decorator():
                         id = "fallback-inline"
 
                     return _Res()
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     logger.error(f"Fallback task inline execution failed: {exc}")
                     raise
 
@@ -75,7 +72,7 @@ def process_pending_events(self, limit: int = 50):  # type: ignore[no-untyped-de
             return {"processed": count}
         finally:
             db.close()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"process_pending_events failed: {exc}")
         # Retry via Celery if available
         if has_celery and hasattr(self, "retry"):
@@ -117,9 +114,10 @@ def telemetry_heartbeat():  # type: ignore[no-untyped-def]
 def extract_ml_features(days_back: int = 7):  # type: ignore[no-untyped-def]
     """Extract ML features for the given past days."""
     try:
+        from datetime import datetime, timedelta, timezone
+
         from backend.app.core.database import SessionLocal
         from backend.app.ml.features.pipeline import FeatureExtractor
-        from datetime import datetime, timezone, timedelta
 
         db = SessionLocal()
         try:
@@ -132,6 +130,6 @@ def extract_ml_features(days_back: int = 7):  # type: ignore[no-untyped-def]
             return {"extracted": count}
         finally:
             db.close()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"extract_ml_features failed: {exc}")
         raise

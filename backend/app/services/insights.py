@@ -1,17 +1,11 @@
-import uuid
 import logging
+import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import func
 
+from sqlalchemy.orm import Session
+
+from backend.app.models.analytics import Anomaly, Bottleneck, Insight, MetricDefinition
 from backend.app.models.core import Team
-from backend.app.models.analytics import (
-    Anomaly,
-    Bottleneck,
-    Insight,
-    MetricDefinition
-)
 
 logger = logging.getLogger("codesense.insights")
 
@@ -19,7 +13,7 @@ class InsightsEngine:
     def __init__(self, db: Session):
         self.db = db
 
-    def generate_insights_from_detections(self, team_id: uuid.UUID, period_start: datetime, period_end: datetime) -> List[Insight]:
+    def generate_insights_from_detections(self, team_id: uuid.UUID, period_start: datetime, period_end: datetime) -> list[Insight]:
         """Convert detected anomalies and bottlenecks into actionable insights."""
         team = self.db.query(Team).get(team_id)
         if not team:
@@ -100,7 +94,7 @@ class InsightsEngine:
         self.db.commit()
         return insights
 
-    def update_insight_status(self, insight_id: uuid.UUID, new_status: str) -> Optional[Insight]:
+    def update_insight_status(self, insight_id: uuid.UUID, new_status: str) -> Insight | None:
         """Manage lifecycle: Detected -> Active -> Reviewed -> Resolved -> Archived"""
         valid_statuses = ["DETECTED", "ACTIVE", "REVIEWED", "RESOLVED", "ARCHIVED"]
         if new_status not in valid_statuses:

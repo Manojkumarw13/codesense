@@ -1,17 +1,19 @@
 import uuid
-from datetime import datetime, timezone
+
 import pytest
+
 from backend.app.core.database import SessionLocal
-from backend.app.models.raw import ProviderEvent
 from backend.app.models.core import (
+    CanonicalEvent,
     Organization,
-    Team,
     Project,
     Repository,
+    Team,
     WorkItem,
-    CanonicalEvent
 )
+from backend.app.models.raw import ProviderEvent
 from backend.app.services.processing import EventProcessor
+
 
 @pytest.fixture(autouse=True)
 def clean_db():

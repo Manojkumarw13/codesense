@@ -1,51 +1,42 @@
 import uuid
 from datetime import datetime, timezone
-import pytest
+
 from sqlalchemy import text
+
 from backend.app.core.database import SessionLocal, engine
-from backend.app.models.base import Base
-from backend.app.models.raw import ProviderEvent
-from backend.app.models.core import (
-    Organization,
-    Team,
-    Repository,
-    Project,
-    User,
-    Role,
-    Permission,
-    UserRole,
-    TeamMember,
-    ProjectMember,
-    WorkItem,
-    Change,
-    Review,
-    Build,
-    Deployment,
-    Incident,
-    CanonicalEvent,
-)
 from backend.app.models.analytics import (
-    MetricDefinition,
-    MetricValue,
-    HealthScore,
-    HealthScoreComponent,
-    AnalyticsSnapshot,
-    EngineeringTrend,
     Anomaly,
     Bottleneck,
-    AIInsightRequest,
+    HealthScore,
+    HealthScoreComponent,
     Insight,
-)
-from backend.app.models.configuration import (
-    Provider,
-    ConnectorConfig,
-    HealthScoreConfig,
-    SystemSetting,
+    MetricDefinition,
+    MetricValue,
 )
 from backend.app.models.audit import (
     AuditLog,
     DataProcessingJob,
 )
+from backend.app.models.configuration import (
+    Provider,
+)
+from backend.app.models.core import (
+    Build,
+    CanonicalEvent,
+    Change,
+    Deployment,
+    Incident,
+    Organization,
+    Project,
+    Repository,
+    Review,
+    Role,
+    Team,
+    TeamMember,
+    User,
+    UserRole,
+)
+from backend.app.models.raw import ProviderEvent
 
 
 def test_all_schemas_exist():
@@ -65,7 +56,7 @@ def test_table_count_and_schemas():
             text("SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema IN ('raw', 'core', 'analytics', 'configuration', 'audit')")
         )
         tables = {(row[0], row[1]) for row in result}
-        assert len(tables) == 34
+        assert len(tables) == 36
 
 
 def test_no_forbidden_productivity_fields():
@@ -93,8 +84,9 @@ def test_crud_across_schemas():
         now = datetime.now(timezone.utc)
 
         # 1. Configuration Schema: Provider
+        unique_name = f"github-test-{uuid.uuid4()}"
         provider = Provider(
-            name="github-test",
+            name=unique_name,
             provider_type="GIT",
             version="v3",
             status="ACTIVE",

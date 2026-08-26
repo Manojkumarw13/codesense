@@ -15,10 +15,8 @@ Tests:
 - Celery app handles missing broker gracefully
 """
 import asyncio
-import time
 
 import pytest
-
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Settings
@@ -108,7 +106,7 @@ class TestCache:
         cache_flush()
 
     def test_cache_set_and_get(self):
-        from backend.app.core.cache import cache_set, cache_get
+        from backend.app.core.cache import cache_get, cache_set
         cache_set("test:key", {"score": 42}, ttl=60)
         result = cache_get("test:key")
         assert result is not None
@@ -120,7 +118,7 @@ class TestCache:
         assert result is None
 
     def test_cache_delete(self):
-        from backend.app.core.cache import cache_set, cache_get, cache_delete
+        from backend.app.core.cache import cache_delete, cache_get, cache_set
         cache_set("del:key", "value", ttl=60)
         assert cache_get("del:key") is not None
         cache_delete("del:key")
@@ -131,19 +129,20 @@ class TestCache:
         from backend.app.core import cache as c
         c.cache_flush()
         # Manually insert an expired entry in the memory store
-        import json, time as t
+        import json
+        import time as t
         c._memory_store["expired:key"] = (json.dumps("old"), t.time() - 1)
         result = c.cache_get("expired:key")
         assert result is None
 
     def test_cache_overwrite(self):
-        from backend.app.core.cache import cache_set, cache_get
+        from backend.app.core.cache import cache_get, cache_set
         cache_set("overwrite:key", "first", ttl=60)
         cache_set("overwrite:key", "second", ttl=60)
         assert cache_get("overwrite:key") == "second"
 
     def test_cache_set_complex_value(self):
-        from backend.app.core.cache import cache_set, cache_get
+        from backend.app.core.cache import cache_get, cache_set
         payload = {"team": "alpha", "score": 87.5, "dims": [1, 2, 3]}
         cache_set("complex:key", payload, ttl=60)
         result = cache_get("complex:key")
@@ -151,7 +150,11 @@ class TestCache:
         assert result["score"] == pytest.approx(87.5)
 
     def test_cache_invalidate_pattern(self):
-        from backend.app.core.cache import cache_set, cache_get, cache_invalidate_pattern
+        from backend.app.core.cache import (
+            cache_get,
+            cache_invalidate_pattern,
+            cache_set,
+        )
         cache_set("health:team:1", 90, ttl=60)
         cache_set("health:team:2", 85, ttl=60)
         cache_set("other:data", 1, ttl=60)
@@ -162,7 +165,7 @@ class TestCache:
         assert cache_get("other:data") == 1
 
     def test_cache_flush_clears_all(self):
-        from backend.app.core.cache import cache_set, cache_get, cache_flush
+        from backend.app.core.cache import cache_flush, cache_get, cache_set
         cache_set("a", 1, ttl=60)
         cache_set("b", 2, ttl=60)
         cache_flush()
@@ -232,7 +235,7 @@ class TestWorkerBase:
         b._stats.is_healthy = True
 
     def test_run_once_success_increments_stats(self):
-        from backend.app.worker.base import run_once, get_worker_stats
+        from backend.app.worker.base import get_worker_stats, run_once
 
         def job():
             return 5
@@ -248,7 +251,7 @@ class TestWorkerBase:
         assert stats.last_duration_ms >= 0
 
     def test_run_once_failure_records_failure(self):
-        from backend.app.worker.base import run_once, get_worker_stats
+        from backend.app.worker.base import get_worker_stats, run_once
 
         def bad_job():
             raise RuntimeError("boom")
@@ -260,12 +263,12 @@ class TestWorkerBase:
         assert stats.is_healthy is False
 
     def test_get_worker_stats_returns_dataclass(self):
-        from backend.app.worker.base import get_worker_stats, WorkerStats
+        from backend.app.worker.base import WorkerStats, get_worker_stats
         stats = get_worker_stats()
         assert isinstance(stats, WorkerStats)
 
     def test_record_success_sets_last_run(self):
-        from backend.app.worker.base import record_success, get_worker_stats
+        from backend.app.worker.base import get_worker_stats, record_success
         record_success(42.0)
         stats = get_worker_stats()
         assert stats.last_duration_ms == 42.0
@@ -295,8 +298,8 @@ class TestObservability:
 
     def test_prometheus_counters_importable(self):
         from backend.app.core.observability import (
-            REQUEST_COUNT,
             INGESTION_COUNTER,
+            REQUEST_COUNT,
             WORKER_HEARTBEAT,
         )
         # If prometheus_client is installed these should be Counter objects;
@@ -347,8 +350,8 @@ class TestCeleryApp:
         assert result["pong"] == 42
 
     def test_cache_warmup_task(self):
+        from backend.app.core.cache import cache_flush, cache_get
         from backend.app.worker.tasks import cache_warmup
-        from backend.app.core.cache import cache_get, cache_flush
         cache_flush()
         cache_warmup("warmup:test", {"value": 99})
         val = cache_get("warmup:test")
@@ -362,10 +365,10 @@ class TestCeleryApp:
 
 class TestHealthEndpointInfra:
     def test_health_endpoint_includes_redis_and_worker(self, monkeypatch):
-        from fastapi.testclient import TestClient
-
         # Patch DB so we don't need a real postgres
         from unittest.mock import MagicMock, patch
+
+        from fastapi.testclient import TestClient
 
         mock_db = MagicMock()
         mock_db.execute.return_value = None
@@ -373,7 +376,7 @@ class TestHealthEndpointInfra:
         with patch("backend.app.api.endpoints.health.get_db", return_value=iter([mock_db])):
             from backend.app.main import app
             client = TestClient(app, raise_server_exceptions=False)
-            resp = client.get("/api/v1/health")
+            resp = client.get("/api/v1/health/detailed")
             # Status 200 or at least not 500 due to redis
             assert resp.status_code in (200, 422, 500)
             if resp.status_code == 200:
@@ -384,6 +387,7 @@ class TestHealthEndpointInfra:
 
     def test_metrics_endpoint_accessible(self):
         from fastapi.testclient import TestClient
+
         from backend.app.main import app
         client = TestClient(app, raise_server_exceptions=False)
         resp = client.get("/api/v1/metrics")

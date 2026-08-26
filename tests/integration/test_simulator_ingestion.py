@@ -1,9 +1,10 @@
 import pytest
 from fastapi.testclient import TestClient
-from backend.app.main import app as backend_app
+
 from backend.app.core.database import SessionLocal
+from backend.app.main import app as backend_app
 from backend.app.models.raw import ProviderEvent
-from simulator.main import app as simulator_app, tick_simulation, state
+from simulator.main import state, tick_simulation
 
 backend_client = TestClient(backend_app)
 

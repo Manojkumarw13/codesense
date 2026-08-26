@@ -1,18 +1,17 @@
 """Model Training Service."""
+import logging
 import os
 import uuid
-import logging
 from datetime import datetime
-from typing import Dict, Any, List
 
+import joblib
 import pandas as pd
 from sklearn.ensemble import IsolationForest
-import joblib
 from sqlalchemy.orm import Session
 
 from backend.app.core.settings import settings
-from backend.app.models.ml import MLFeatureVector
 from backend.app.models.configuration import ModelRegistry
+from backend.app.models.ml import MLFeatureVector
 
 logger = logging.getLogger("codesense.ml.training")
 
@@ -81,7 +80,7 @@ class ModelTrainer:
         logger.info("Global model registered successfully.")
         return registry_entry
 
-    def train_team_models(self) -> List[ModelRegistry]:
+    def train_team_models(self) -> list[ModelRegistry]:
         """Train team-specific adaptation models."""
         logger.info("Fetching ML feature vectors to train team-specific models...")
         vectors = self.db.query(MLFeatureVector).all()
@@ -124,7 +123,7 @@ class ModelTrainer:
             
             # Invalidate older models for this team
             self.db.query(ModelRegistry).filter(
-                ModelRegistry.model_name == f"team_anomaly",
+                ModelRegistry.model_name == "team_anomaly",
                 ModelRegistry.team_id == uuid.UUID(team_id)
             ).update({"is_active": False})
             

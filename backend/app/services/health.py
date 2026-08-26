@@ -1,18 +1,17 @@
-import uuid
 import logging
+import uuid
 from datetime import datetime
-from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from backend.app.models.core import Team
+from sqlalchemy.orm import Session
+
 from backend.app.models.analytics import (
-    MetricValue,
     HealthScore,
     HealthScoreComponent,
-    MetricDefinition
+    MetricDefinition,
+    MetricValue,
 )
 from backend.app.models.configuration import HealthScoreConfig
+from backend.app.models.core import Team
 
 logger = logging.getLogger("codesense.health")
 
@@ -39,7 +38,7 @@ class HealthScoreEngine:
     def __init__(self, db: Session):
         self.db = db
 
-    def _get_configs(self, organization_id: uuid.UUID) -> Dict[str, HealthScoreConfig]:
+    def _get_configs(self, organization_id: uuid.UUID) -> dict[str, HealthScoreConfig]:
         configs = self.db.query(HealthScoreConfig).filter(
             HealthScoreConfig.organization_id == organization_id,
             HealthScoreConfig.is_enabled == True

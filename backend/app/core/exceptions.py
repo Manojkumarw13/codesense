@@ -1,9 +1,12 @@
-from typing import Any, Dict, Optional
+from typing import Any
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
 from backend.app.core.logging import request_id_var
+
 
 class CodeSenseException(Exception):
     """Base exception for all CodeSense application errors."""
@@ -12,7 +15,7 @@ class CodeSenseException(Exception):
         code: str,
         message: str,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        details: Optional[Dict[str, Any]] = None
+        details: dict[str, Any] | None = None
     ) -> None:
         self.code = code
         self.message = message
@@ -22,7 +25,7 @@ class CodeSenseException(Exception):
 
 
 class NotFoundError(CodeSenseException):
-    def __init__(self, message: str = "Resource not found", details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, message: str = "Resource not found", details: dict[str, Any] | None = None) -> None:
         super().__init__(
             code="NOT_FOUND",
             message=message,
@@ -32,7 +35,7 @@ class NotFoundError(CodeSenseException):
 
 
 class ValidationError(CodeSenseException):
-    def __init__(self, message: str = "Validation failed", details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, message: str = "Validation failed", details: dict[str, Any] | None = None) -> None:
         super().__init__(
             code="VALIDATION_FAILED",
             message=message,
@@ -42,7 +45,7 @@ class ValidationError(CodeSenseException):
 
 
 class AuthenticationError(CodeSenseException):
-    def __init__(self, message: str = "Authentication failed", details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, message: str = "Authentication failed", details: dict[str, Any] | None = None) -> None:
         super().__init__(
             code="AUTHENTICATION_FAILED",
             message=message,
@@ -52,7 +55,7 @@ class AuthenticationError(CodeSenseException):
 
 
 class AuthorizationError(CodeSenseException):
-    def __init__(self, message: str = "Not authorized", details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, message: str = "Not authorized", details: dict[str, Any] | None = None) -> None:
         super().__init__(
             code="AUTHORIZATION_FAILED",
             message=message,
@@ -62,7 +65,7 @@ class AuthorizationError(CodeSenseException):
 
 
 class ConflictError(CodeSenseException):
-    def __init__(self, message: str = "Resource conflict", details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, message: str = "Resource conflict", details: dict[str, Any] | None = None) -> None:
         super().__init__(
             code="CONFLICT",
             message=message,
@@ -72,7 +75,7 @@ class ConflictError(CodeSenseException):
 
 
 class DatabaseError(CodeSenseException):
-    def __init__(self, message: str = "Database operation failed", details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, message: str = "Database operation failed", details: dict[str, Any] | None = None) -> None:
         super().__init__(
             code="DATABASE_ERROR",
             message=message,
@@ -82,7 +85,7 @@ class DatabaseError(CodeSenseException):
 
 
 class AIError(CodeSenseException):
-    def __init__(self, message: str = "AI gateway error", details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, message: str = "AI gateway error", details: dict[str, Any] | None = None) -> None:
         super().__init__(
             code="AI_ERROR",
             message=message,

@@ -1,97 +1,96 @@
-from backend.app.models.base import Base
-
-# Raw schema
-from backend.app.models.raw import ProviderEvent
-
-# Core schema
-from backend.app.models.core import (
-    Organization,
-    User,
-    Role,
-    Permission,
-    UserRole,
-    Team,
-    TeamMember,
-    Project,
-    ProjectMember,
-    Repository,
-    WorkItem,
-    Change,
-    Review,
-    Build,
-    Deployment,
-    Incident,
-    CanonicalEvent,
-)
-
 # Analytics schema
 from backend.app.models.analytics import (
-    MetricDefinition,
-    MetricValue,
-    HealthScore,
-    HealthScoreComponent,
+    AIInsightRequest,
     AnalyticsSnapshot,
-    EngineeringTrend,
     Anomaly,
     Bottleneck,
-    AIInsightRequest,
+    EngineeringTrend,
+    HealthScore,
+    HealthScoreComponent,
     Insight,
+    MetricDefinition,
+    MetricValue,
 )
-
-# Configuration schema
-from backend.app.models.configuration import (
-    Provider,
-    ConnectorConfig,
-    HealthScoreConfig,
-    SystemSetting,
-    ModelRegistry,
-)
-
-# ML schema
-from backend.app.models.ml import MLFeatureVector
 
 # Audit schema
 from backend.app.models.audit import (
     AuditLog,
     DataProcessingJob,
 )
+from backend.app.models.base import Base
+
+# Configuration schema
+from backend.app.models.configuration import (
+    ConnectorConfig,
+    HealthScoreConfig,
+    ModelRegistry,
+    Provider,
+    SystemSetting,
+)
+
+# Core schema
+from backend.app.models.core import (
+    Build,
+    CanonicalEvent,
+    Change,
+    Deployment,
+    Incident,
+    Organization,
+    Permission,
+    Project,
+    ProjectMember,
+    Repository,
+    Review,
+    Role,
+    Team,
+    TeamMember,
+    User,
+    UserRole,
+    WorkItem,
+)
+
+# ML schema
+from backend.app.models.ml import MLFeatureVector
+
+# Raw schema
+from backend.app.models.raw import ProviderEvent
 
 __all__ = [
+    "AIInsightRequest",
+    "AnalyticsSnapshot",
+    "Anomaly",
+    "AuditLog",
     "Base",
-    "ProviderEvent",
-    "Organization",
-    "User",
-    "Role",
-    "Permission",
-    "UserRole",
-    "Team",
-    "TeamMember",
-    "Project",
-    "ProjectMember",
-    "Repository",
-    "WorkItem",
-    "Change",
-    "Review",
+    "Bottleneck",
     "Build",
-    "Deployment",
-    "Incident",
     "CanonicalEvent",
-    "MetricDefinition",
-    "MetricValue",
+    "Change",
+    "ConnectorConfig",
+    "DataProcessingJob",
+    "Deployment",
+    "EngineeringTrend",
     "HealthScore",
     "HealthScoreComponent",
-    "AnalyticsSnapshot",
-    "EngineeringTrend",
-    "Anomaly",
-    "Bottleneck",
-    "AIInsightRequest",
-    "Insight",
-    "Provider",
-    "ConnectorConfig",
     "HealthScoreConfig",
-    "SystemSetting",
-    "ModelRegistry",
-    "AuditLog",
-    "DataProcessingJob",
+    "Incident",
+    "Insight",
     "MLFeatureVector",
+    "MetricDefinition",
+    "MetricValue",
+    "ModelRegistry",
+    "Organization",
+    "Permission",
+    "Project",
+    "ProjectMember",
+    "Provider",
+    "ProviderEvent",
+    "Repository",
+    "Review",
+    "Role",
+    "SystemSetting",
+    "Team",
+    "TeamMember",
+    "User",
+    "UserRole",
+    "WorkItem",
 ]

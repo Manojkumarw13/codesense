@@ -1,11 +1,10 @@
 import uuid
-import pytest
 from datetime import datetime, timedelta, timezone
+
+from backend.app.core.database import SessionLocal
+from backend.app.models.core import Deployment, Organization, Team
 from backend.app.services.metrics import MetricEngine
-from backend.app.models.core import Team, Deployment, Organization
-from backend.app.models.analytics import MetricValue
-from backend.app.core.database import SessionLocal, engine
-from backend.app.models.base import Base
+
 
 def test_deployment_frequency():
     db = SessionLocal()

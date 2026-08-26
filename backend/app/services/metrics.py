@@ -1,24 +1,19 @@
-import uuid
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, select
-from sqlalchemy.sql.expression import cast
+import uuid
+from datetime import datetime
 
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
+from backend.app.models.analytics import MetricDefinition, MetricValue
 from backend.app.models.core import (
-    Change,
-    Review,
     Build,
+    Change,
     Deployment,
     Incident,
-    WorkItem,
+    Review,
     Team,
-    Repository
-)
-from backend.app.models.analytics import (
-    MetricDefinition,
-    MetricValue
+    WorkItem,
 )
 
 logger = logging.getLogger("codesense.metrics")
@@ -44,23 +39,25 @@ class MetricEngine:
             ("work_in_progress", "Work-in-Progress", "Workflow", "count", "average"),
         ]
         
+        from sqlalchemy.dialects.postgresql import insert
+        
         self.metric_defs = {}
         for key, name, category, unit, agg in definitions:
+            stmt = insert(MetricDefinition).values(
+                id=uuid.uuid4(),
+                metric_key=key,
+                name=name,
+                category=category,
+                unit=unit,
+                aggregation_method=agg
+            ).on_conflict_do_nothing(index_elements=['metric_key'])
+            self.db.execute(stmt)
+            self.db.commit()
+            
             dfn = self.db.query(MetricDefinition).filter(MetricDefinition.metric_key == key).first()
-            if not dfn:
-                dfn = MetricDefinition(
-                    id=uuid.uuid4(),
-                    metric_key=key,
-                    name=name,
-                    category=category,
-                    unit=unit,
-                    aggregation_method=agg
-                )
-                self.db.add(dfn)
             self.metric_defs[key] = dfn
-        self.db.commit()
 
-    def calculate_metrics_for_period(self, team_id: uuid.UUID, period_start: datetime, period_end: datetime) -> List[MetricValue]:
+    def calculate_metrics_for_period(self, team_id: uuid.UUID, period_start: datetime, period_end: datetime) -> list[MetricValue]:
         values = []
         
         # 1. Deployment Frequency
@@ -227,7 +224,7 @@ class MetricEngine:
             value=value
         )
         
-    def _calculate_baselines_and_changes(self, current_values: List[MetricValue], team_id: uuid.UUID, current_start: datetime, current_end: datetime):
+    def _calculate_baselines_and_changes(self, current_values: list[MetricValue], team_id: uuid.UUID, current_start: datetime, current_end: datetime):
         duration = current_end - current_start
         prev_start = current_start - duration
         prev_end = current_start

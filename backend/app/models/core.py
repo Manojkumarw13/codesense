@@ -1,19 +1,22 @@
 import uuid
+
 from sqlalchemy import (
-    Column,
-    String,
-    Text,
     Boolean,
-    Integer,
+    Column,
     DateTime,
     ForeignKey,
-    UniqueConstraint,
     Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 from backend.app.models.base import Base
+
 
 class Organization(Base):
     __tablename__ = "organizations"

@@ -1,9 +1,9 @@
 import sys
-from os.path import abspath, dirname
 from logging.config import fileConfig
+from os.path import abspath, dirname
 
-from sqlalchemy import engine_from_config, pool
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # Ensure workspace root is on sys.path
 sys.path.insert(0, abspath(dirname(dirname(dirname(__file__)))))

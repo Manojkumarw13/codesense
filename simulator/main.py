@@ -1,13 +1,14 @@
-import random
-import uuid
 import logging
+import random
 import threading
 import time
+import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Any, Optional
-from fastapi import FastAPI, BackgroundTasks, HTTPException
-from pydantic import BaseModel
+from typing import Any
+
 import requests
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger("codesense.simulator")
@@ -16,6 +17,7 @@ app = FastAPI(title="CodeSense Real-Time Data Simulator")
 
 # Configuration
 import os
+
 BASE_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 BACKEND_URL = f"{BASE_URL}/api/v1/events"
 BACKEND_BATCH_URL = f"{BASE_URL}/api/v1/events/batch"
@@ -40,12 +42,12 @@ class SimulatorState:
         self.repository_id = "repo-backend-uuid"
         
         # Track active work items, PRs, builds, etc.
-        self.active_work_items: Dict[str, Dict[str, Any]] = {}
-        self.active_changes: Dict[str, Dict[str, Any]] = {}
-        self.active_reviews: Dict[str, Dict[str, Any]] = {}
-        self.active_builds: Dict[str, Dict[str, Any]] = {}
-        self.active_deployments: Dict[str, Dict[str, Any]] = {}
-        self.active_incidents: Dict[str, Dict[str, Any]] = {}
+        self.active_work_items: dict[str, dict[str, Any]] = {}
+        self.active_changes: dict[str, dict[str, Any]] = {}
+        self.active_reviews: dict[str, dict[str, Any]] = {}
+        self.active_builds: dict[str, dict[str, Any]] = {}
+        self.active_deployments: dict[str, dict[str, Any]] = {}
+        self.active_incidents: dict[str, dict[str, Any]] = {}
         
         # Lock for thread-safety
         self.lock = threading.Lock()
@@ -57,12 +59,12 @@ class ScenarioUpdate(BaseModel):
     scenario: str
 
 class ConfigUpdate(BaseModel):
-    tick_interval: Optional[float] = None
-    simulated_hours_per_tick: Optional[int] = None
-    backend_url: Optional[str] = None
+    tick_interval: float | None = None
+    simulated_hours_per_tick: int | None = None
+    backend_url: str | None = None
 
 
-def generate_event(event_type: str, payload: Dict[str, Any], occurred_at: datetime) -> Dict[str, Any]:
+def generate_event(event_type: str, payload: dict[str, Any], occurred_at: datetime) -> dict[str, Any]:
     """Helper to structure a raw simulator event."""
     return {
         "provider": "simulator",
@@ -84,7 +86,7 @@ def generate_event(event_type: str, payload: Dict[str, Any], occurred_at: dateti
     }
 
 
-def send_events_to_backend(events: List[Dict[str, Any]]):
+def send_events_to_backend(events: list[dict[str, Any]]):
     """Sends a batch of events to the backend ingestion API."""
     if not events:
         return
@@ -98,12 +100,12 @@ def send_events_to_backend(events: List[Dict[str, Any]]):
         if resp.status_code not in (200, 201):
             logger.error(f"Backend returned error {resp.status_code}: {resp.text}")
     except Exception as e:
-        logger.error(f"Failed to post events to backend: {str(e)}")
+        logger.error(f"Failed to post events to backend: {e!s}")
 
 
-def tick_simulation() -> List[Dict[str, Any]]:
+def tick_simulation() -> list[dict[str, Any]]:
     """Simulates 1 tick of activity and returns generated events."""
-    events: List[Dict[str, Any]] = []
+    events: list[dict[str, Any]] = []
     
     with state.lock:
         state.current_time += timedelta(hours=state.simulated_hours_per_tick)
@@ -298,7 +300,7 @@ def run_loop():
     # We send them in batches of 10 ticks to make it super fast but realistic
     logger.info("Starting historical data backfill (30 days)...")
     backfill_ticks = 30 * 24
-    batch: List[Dict[str, Any]] = []
+    batch: list[dict[str, Any]] = []
     
     for i in range(backfill_ticks):
         events = tick_simulation()

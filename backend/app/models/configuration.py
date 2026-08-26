@@ -1,17 +1,20 @@
 import uuid
+
 from sqlalchemy import (
-    Column,
-    String,
     Boolean,
-    Float,
+    Column,
     DateTime,
+    Float,
     ForeignKey,
+    String,
     UniqueConstraint,
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 from backend.app.models.base import Base
+
 
 class Provider(Base):
     __tablename__ = "providers"

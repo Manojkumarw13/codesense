@@ -1,9 +1,9 @@
 import json
 import logging
 import sys
-import time
 from contextvars import ContextVar
-from typing import Any, Dict
+from typing import Any
+
 from backend.app.core.settings import settings
 
 # Context variables for request tracking
@@ -17,7 +17,7 @@ class StructuredFormatter(logging.Formatter):
         # Prevent secret logging by filtering log message or attributes
         message = record.getMessage()
         
-        log_data: Dict[str, Any] = {
+        log_data: dict[str, Any] = {
             "timestamp": self.formatTime(record, self.datefmt),
             "level": record.levelname,
             "logger": record.name,

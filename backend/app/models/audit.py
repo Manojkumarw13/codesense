@@ -1,16 +1,19 @@
 import uuid
+
 from sqlalchemy import (
     Column,
-    String,
-    Text,
-    Integer,
     DateTime,
     ForeignKey,
     Index,
+    Integer,
+    String,
+    Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 from backend.app.models.base import Base
+
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"

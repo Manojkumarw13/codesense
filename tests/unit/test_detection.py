@@ -1,10 +1,14 @@
 import uuid
-import pytest
 from datetime import datetime, timedelta, timezone
+
+from backend.app.core.database import SessionLocal
+from backend.app.models.analytics import (
+    MetricDefinition,
+    MetricValue,
+)
+from backend.app.models.core import Organization, Team
 from backend.app.services.detection import DetectionEngine
-from backend.app.models.core import Team, Organization
-from backend.app.models.analytics import MetricValue, MetricDefinition, Anomaly, Bottleneck
-from backend.app.core.database import SessionLocal, engine
+
 
 def test_anomaly_and_bottleneck_detection():
     db = SessionLocal()
@@ -15,16 +19,23 @@ def test_anomaly_and_bottleneck_detection():
         org = Organization(id=org_id, name="Test Org")
         team = Team(id=team_id, name="Test Team", organization_id=org_id)
         db.add_all([org, team])
+        db.commit()
         
         # Metric Definitions
+        def get_or_create_def(mkey, name):
+            d = db.query(MetricDefinition).filter_by(metric_key=mkey).first()
+            if not d:
+                d = MetricDefinition(id=uuid.uuid4(), metric_key=mkey, name=name)
+                db.add(d)
+                db.commit()
+            return d
+
         defs = {
-            "review_backlog": MetricDefinition(id=uuid.uuid4(), metric_key="review_backlog", name="Review Backlog"),
-            "review_turnaround": MetricDefinition(id=uuid.uuid4(), metric_key="review_turnaround", name="Review Turnaround"),
-            "pipeline_duration": MetricDefinition(id=uuid.uuid4(), metric_key="pipeline_duration", name="Pipeline Duration"),
-            "build_success_rate": MetricDefinition(id=uuid.uuid4(), metric_key="build_success_rate", name="Build Success Rate"),
+            "review_backlog": get_or_create_def("review_backlog", "Review Backlog"),
+            "review_turnaround": get_or_create_def("review_turnaround", "Review Turnaround"),
+            "pipeline_duration": get_or_create_def("pipeline_duration", "Pipeline Duration"),
+            "build_success_rate": get_or_create_def("build_success_rate", "Build Success Rate"),
         }
-        for d in defs.values(): db.add(d)
-        db.commit()
         
         now = datetime.now(timezone.utc)
         start = now - timedelta(days=7)

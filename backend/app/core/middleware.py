@@ -1,8 +1,10 @@
+import logging
 import time
 import uuid
-import logging
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from backend.app.core.logging import request_id_var
 
 logger = logging.getLogger("codesense.api")
@@ -33,7 +35,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
             process_time = time.perf_counter() - start_time
             logger.exception(
                 f"Request failed: {request.method} {request.url.path} - "
-                f"Error: {str(e)} - Duration: {process_time:.4f}s"
+                f"Error: {e!s} - Duration: {process_time:.4f}s"
             )
             raise e
         finally:

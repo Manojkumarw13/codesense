@@ -1,15 +1,20 @@
-import logging
 import json
+import logging
+
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
-from backend.app.core.settings import settings
-from backend.app.core.logging import StructuredFormatter, DevelopmentFormatter, request_id_var
+
 from backend.app.core.exceptions import (
-    CodeSenseException,
     NotFoundError,
-    ValidationError,
     register_exception_handlers,
 )
+from backend.app.core.logging import (
+    DevelopmentFormatter,
+    StructuredFormatter,
+    request_id_var,
+)
+from backend.app.core.settings import settings
+
 
 def test_settings_uri():
     """Verify Settings class SQLALCHEMY_DATABASE_URI construction."""

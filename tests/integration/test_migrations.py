@@ -1,7 +1,7 @@
-import pytest
-from alembic.config import Config
 from alembic import command
+from alembic.config import Config
 from sqlalchemy import text
+
 from backend.app.core.database import engine
 from backend.app.core.settings import settings
 
