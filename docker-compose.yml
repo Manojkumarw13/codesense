@@ -26,7 +26,7 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: backend
+    container_name: codesense-backend
     restart: unless-stopped
     environment:
       POSTGRES_SERVER: postgres
@@ -98,7 +98,7 @@ services:
     build:
       context: .
       dockerfile: simulator/Dockerfile
-    container_name: simulator
+    container_name: codesense-simulator
     restart: unless-stopped
     environment:
       SIMULATOR_SCENARIO: ${SIMULATOR_SCENARIO:-NORMAL}
