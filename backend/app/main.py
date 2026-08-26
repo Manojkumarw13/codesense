@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import logging
 from backend.app.core.settings import settings
-from backend.app.api.endpoints import health, events, metrics as metrics_endpoint
+from backend.app.api.endpoints import health, events, metrics as metrics_endpoint, risk
 from backend.app.core.logging import setup_logging
 from backend.app.core.middleware import RequestIDMiddleware
 from backend.app.core.exceptions import register_exception_handlers
@@ -48,6 +48,7 @@ register_exception_handlers(app)
 app.include_router(health.router, prefix=settings.API_V1_STR, tags=["health"])
 app.include_router(events.router, prefix=settings.API_V1_STR, tags=["events"])
 app.include_router(metrics_endpoint.router, prefix=settings.API_V1_STR, tags=["observability"])
+app.include_router(risk.router, prefix=settings.API_V1_STR, tags=["risk"])
 
 @app.get("/")
 def read_root():

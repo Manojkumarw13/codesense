@@ -345,8 +345,8 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Register in `configuration.model_registry`.
 - **DoD:** Trained ML models stored and versioned.
 
-### Phase 13 — Risk Prediction
-- [ ] Risk prediction for deployment failure / incident spikes.
+### Phase 13 — Risk Prediction ✅
+- [x] Risk prediction for deployment failure / incident spikes.
 - **DoD:** Risk API returns prediction probabilities.
 
 ### Phase 14 — ML Anomaly Detection
