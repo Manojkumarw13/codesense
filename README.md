@@ -1,6 +1,6 @@
 # CodeSense
 
-CodeSense is a privacy-preserving, provider-agnostic engineering analytics platform. It collects software development activity from various systems, normalizes it into a canonical analytical model, and calculates team-level engineering insights (such as an explainable Engineering Health Score, bottleneck detection, trend analysis, and dashboards).
+CodeSense is an ML-powered engineering intelligence platform that preserves privacy and remains provider-agnostic. It collects software development activity from various systems, normalizes it into a canonical analytical model, and calculates team-level engineering insights (such as an explainable Engineering Health Score, hybrid ML anomaly detection, risk prediction, bottleneck detection, trend analysis, and dashboards).
 
 ## Key Principles
 1. Raw provider events are stored unmodified (immutable).

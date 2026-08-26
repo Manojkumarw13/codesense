@@ -336,8 +336,8 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Severity (LOW/MEDIUM/HIGH/CRITICAL) + evidence stored with each detection
 - **DoD:** Simulator bottleneck scenarios automatically produce the expected detections.
 
-### Phase 11 — Feature Pipeline
-- [ ] Setup `ml/features/` store.
+### Phase 11 — Feature Pipeline ✅
+- [x] Setup `ml/features/` store.
 - **DoD:** ML features extracted automatically per period.
 
 ### Phase 12 — Model Training & Registry

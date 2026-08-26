@@ -111,3 +111,27 @@ def telemetry_heartbeat():  # type: ignore[no-untyped-def]
         pass
     logger.debug("worker heartbeat")
     return {"heartbeat": datetime.now(timezone.utc).isoformat()}
+
+
+@task(name="extract_ml_features")  # type: ignore[misc]
+def extract_ml_features(days_back: int = 7):  # type: ignore[no-untyped-def]
+    """Extract ML features for the given past days."""
+    try:
+        from backend.app.core.database import SessionLocal
+        from backend.app.ml.features.pipeline import FeatureExtractor
+        from datetime import datetime, timezone, timedelta
+
+        db = SessionLocal()
+        try:
+            extractor = FeatureExtractor(db)
+            end = datetime.now(timezone.utc)
+            start = end - timedelta(days=days_back)
+            
+            count = extractor.run_extraction_for_period(start, end)
+            logger.info(f"[worker] extracted ML features for {count} teams")
+            return {"extracted": count}
+        finally:
+            db.close()
+    except Exception as exc:  # noqa: BLE001
+        logger.exception(f"extract_ml_features failed: {exc}")
+        raise

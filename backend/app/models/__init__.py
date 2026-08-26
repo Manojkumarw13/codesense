@@ -46,6 +46,9 @@ from backend.app.models.configuration import (
     SystemSetting,
 )
 
+# ML schema
+from backend.app.models.ml import MLFeatureVector
+
 # Audit schema
 from backend.app.models.audit import (
     AuditLog,
@@ -88,4 +91,5 @@ __all__ = [
     "SystemSetting",
     "AuditLog",
     "DataProcessingJob",
+    "MLFeatureVector",
 ]
