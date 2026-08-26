@@ -8,7 +8,7 @@
 
 ## 1. What We Are Building
 
-CodeSense is a **privacy-preserving, provider-agnostic engineering analytics platform** that collects software-development activity from many tools (Git, issue trackers, CI/CD, deployments, incidents), stores the raw events **unmodified**, normalizes them into a **canonical analytical model**, and turns them into **team-level engineering insights** — an explainable **Engineering Health Score**, bottleneck detection, anomaly detection, trend analysis, dashboards, and optional AI explanations.
+CodeSense is a **privacy-preserving, provider-agnostic, ML-powered engineering intelligence platform** that collects software-development activity from many tools (Git, issue trackers, CI/CD, deployments, incidents), stores the raw events **unmodified**, normalizes them into a **canonical analytical model**, and turns them into **team-level engineering insights** — an explainable **Engineering Health Score**, bottleneck detection, hybrid machine learning architecture integrating statistical rules with predictive ML models for anomaly detection and risk forecasting, trend analysis, dashboards, and optional AI explanations.
 
 > The goal is to measure **engineering-system health**, never to rank or surveil individual developers.
 
@@ -51,7 +51,14 @@ Canonical Data Layer  (teams, repos, work_items, changes, reviews,
         ▼              ▼               ▼               ▼
   Metric Engine   Health Score    Trend Engine   Anomaly/Bottleneck
         │              │               │               │
-        └──────────────┴───────┬───────┴───────────────┘
+        └──────┬───────┴───────┬───────┴───────┬───────┘
+               ▼               ▼               ▼
+          Rule Engine    Stats Engine      ML Engine
+               │               │               │
+               └───────┬───────┴───────┬───────┘
+                       ▼               ▼
+                Fusion Engine (Evidence + Confidence)
+                               │
                                ▼
                      Insight / Recommendations
                                │
@@ -71,13 +78,14 @@ Canonical Data Layer  (teams, repos, work_items, changes, reviews,
 | Layer | Choice | Notes |
 |---|---|---|
 | Backend | **Python + FastAPI** (Uvicorn, Pydantic) | Async, validation, ML-friendly |
+| ML Frameworks | **scikit-learn, xgboost, prophet** | Global → Org → Team scope |
 | ORM / Migrations | **SQLAlchemy + Alembic** | Versioned schema migrations |
 | Database | **PostgreSQL** | Layered schemas: `raw`, `core`, `analytics`, `configuration`, `audit` |
 | Data processing | **Pandas / NumPy** (Polars optional) | Metric & aggregation engine |
 | Cache / queue | **Redis** (optional for MVP) | Caching, queues, rate limiting (deferred, DB is sufficient for MVP) |
 | Frontend | **React + TypeScript** (+ Recharts/Plotly) | Strict standard; React + TS only (no Streamlit) |
 | AI | **OpenRouter-compatible LLM** (optional) | Behind privacy gateway |
-| Infra | **Docker + Docker Compose** (+ Nginx optional) | Reproducible deploy |
+| Infra | **Docker + Docker Compose** (+ Nginx optional) | Reproducible deploy. Reference `INFRASTRUCTURE.md` |
 
 ---
 
@@ -100,6 +108,13 @@ codesense/
 │       ├── metrics/       # metric engine
 │       ├── health_score/
 │       ├── anomaly_detection/
+│       ├── ml/            # ML models and pipeline
+│       │   ├── fusion_engine.py
+│       │   ├── features/
+│       │   ├── models/    # global/org/team scopes
+│       │   ├── pipeline/
+│       │   ├── inference/
+│       │   └── registry/
 │       ├── insights/
 │       ├── privacy/       # privacy gateway, AI sanitizer
 │       └── ai/            # optional LLM client
@@ -124,8 +139,9 @@ raw/        provider_events              ← immutable original payloads
 core/       organizations, teams, repositories, projects, work_items,
             changes, reviews, builds, deployments, incidents, canonical_events
 analytics/  metric_definitions, metric_values, health_scores,
-            health_score_components, engineering_trends, analytics_snapshots, ai_insights, ai_insight_requests
-configuration/ providers, connector_configs, health_score_configs
+            health_score_components, engineering_trends, analytics_snapshots, ai_insights, ai_insight_requests,
+            ml_features, ml_predictions, training_jobs
+configuration/ providers, connector_configs, health_score_configs, model_registry
 audit/      audit_logs
 ```
 
@@ -195,7 +211,7 @@ Aggregations: hourly / daily / weekly / monthly / custom range, at team and repo
 
 ---
 
-## 9. Detection & Insights
+## 9. Detection, Prediction & Insights
 
 ### Bottlenecks (categories: REVIEW, CI, DEPLOYMENT, WORKFLOW, INCIDENT)
 - **Review:** backlog ↑ **and** turnaround ↑
@@ -203,11 +219,16 @@ Aggregations: hourly / daily / weekly / monthly / custom range, at team and repo
 - **Deployment:** deployment failure ↑ **or** rollback rate ↑
 - **Workflow:** WIP ↑ **and** cycle time ↑
 
-### Anomalies
-Start with statistical baseline methods: **rolling averages (7/30-day), % change, Z-score, baseline comparison**. Record `baseline`, `observed_value`, `change_percent`, `severity (LOW/MED/HIGH/CRITICAL)`, `confidence`.
+### ML-Powered Anomaly & Hybrid Detection
+Integrates statistical rules with predictive ML models via a `FusionEngine` fallback chain (Rules + Stats + ML). 
+Methods: **prophet time-series, isolation forests, Z-score, baseline comparison**. Model scope: Global Model → Org Adaptation → Team Adaptation (no individual developer modeling).
+
+### Risk Prediction
+- Predicts likelihood of deployment failures or incident spikes using `xgboost`.
+- Output: Risk score + Evidence + Confidence (mandatory).
 
 ### Insights (`analytics.insights`)
-Rule-based first. Each insight: `type`, `category`, `severity`, `title`, `description`, `evidence` (linked metrics), `generated_by (RULE_ENGINE / STATISTICAL_ENGINE / LOCAL_AI / CLOUD_AI)`. Lifecycle: Detected → Active → Reviewed → Resolved → Archived.
+Hybrid-based. Each insight: `type`, `category`, `severity`, `title`, `description`, `evidence` (linked metrics), `confidence`, `generated_by (RULE_ENGINE / STATISTICAL_ENGINE / ML_ENGINE / LOCAL_AI / CLOUD_AI)`. Lifecycle: Detected → Active → Reviewed → Resolved → Archived.
 
 ---
 
@@ -227,6 +248,10 @@ Rule-based first. Each insight: `type`, `category`, `severity`, `title`, `descri
 | `GET /insights` | Get engineering/AI insights |
 | `GET /anomalies` | Get detected anomalies |
 | `GET /bottlenecks` | Get detected flow bottlenecks |
+| `GET /ml/predictions` | Get ML predictions (risk, anomaly) |
+| `GET /ml/models` | List registered ML models |
+| `POST /ml/train` | Trigger model training job |
+| `GET /ml/features` | Get team feature vectors |
 | `POST /ai/explain` | Generate synchronous real-time AI explanation (receives aggregates, strips identity, queries LLM) |
 
 Standardized error responses: 400 / 401 / 403 / 404 / 409 / 422 / 500.
@@ -248,21 +273,28 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] `.env.example`, `.gitignore`, `README.md`
 - **DoD:** Backend starts with working `GET /api/v1/health`.
 
-### Phase 2 — Database Foundation ✅
+### Phase 2 — Infrastructure Foundation ✅
+- [x] Setup Redis for cache and job queue
+- [x] Configure background workers (Celery/RQ)
+- [x] Setup observability (Prometheus/Grafana/OpenTelemetry)
+- [x] Setup CI/CD pipeline
+- **DoD:** Infrastructure components are running and monitored.
+
+### Phase 3 — Database Foundation ✅
 - [x] PostgreSQL up; create `codesense` DB
 - [x] Create schemas (`raw`, `core`, `analytics`, `configuration`, `audit`) + all tables
 - [x] Alembic initial migration; verify migrate **and** rollback
 - [x] Add required indexes
 - **DoD:** Full schema created from a clean DB via migrations only.
 
-### Phase 3 — Backend Foundation ✅
+### Phase 4 — Backend Foundation ✅
 - [x] App structure (core/api/models/schemas/services/repositories)
 - [x] Env, DB, logging, settings config
 - [x] SQLAlchemy models + session + repository pattern + transactions
 - [x] Standard error handling
 - **DoD:** FastAPI ⇄ PostgreSQL round-trip with reliable responses.
 
-### Phase 4 — Real-Time Simulator (data source; NOT the product) ✅
+### Phase 5 — Real-Time Simulator (data source; NOT the product) ✅
 - [x] Entity generators: orgs, teams, repos, projects, work_items, changes, reviews, builds, deployments, incidents
 - [x] Event generators for all canonical events
 - [x] Scenarios (sequential): NORMAL → HIGH_LOAD → REVIEW_BOTTLENECK → CI_BOTTLENECK → DEPLOYMENT_FAILURE → INCIDENT_SPIKE → RECOVERY
@@ -270,7 +302,7 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Deterministic when seeded; realistic timestamps; **sends through the real ingestion API** (never bypasses pipeline)
 - **DoD:** Simulator streams realistic, correlated events continuously.
 
-### Phase 5 — Ingestion Pipeline ✅
+### Phase 6 — Ingestion Pipeline ✅
 - [x] `POST /events`, `/batch`, `GET /events`
 - [x] Validation: provider, event id, event type, timestamp, payload, source
 - [x] Dedup via `provider + external_event_id` (idempotency)
@@ -278,75 +310,95 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Quarantine / dead-letter for invalid events
 - **DoD:** Thousands of simulated events ingested reliably, no duplicates.
 
-### Phase 6 — Canonical Data Layer ✅
+### Phase 7 — Canonical Data Layer ✅
 - [x] Normalization framework (`base.py`, `github.py`, `gitlab.py`, `jira.py`, `simulator.py`)
 - [x] Provider→canonical mappings (PR/MR → `CHANGE_CREATED`, review → `REVIEW_COMPLETED`, …)
 - [x] Canonical entity creation + relationship resolution (Team→Repo→Change→Review→Build→Deploy→Incident)
 - [x] `actor_ref` handling (internal only)
 - **DoD:** Different provider-shaped events converge to the same canonical model.
 
-### Phase 7 — Analytics / Metric Engine ✅
+### Phase 8 — Analytics / Metric Engine ✅
 - [x] Generic metric framework (definition → query → calc → aggregate → `metric_values`)
 - [x] Delivery → Development → CI/CD → Reliability metrics (12 above)
 - [x] Time aggregations + baselines + % change
 - **DoD:** All MVP metrics compute correctly from canonical events.
 
-### Phase 8 — Engineering Health Score ✅
+### Phase 9 — Engineering Health Score ✅
 - [x] 6 dimensions, normalization to 0–100, configurable weights
 - [x] Weighted overall score
 - [x] Explainability (Score→Dimension→Metric→Evidence)
 - [x] Historical score + change
 - **DoD:** Reproducible, explainable, team-level score.
 
-### Phase 9 — Bottleneck & Anomaly Detection ✅
+### Phase 10 — Bottleneck & Statistical Anomaly Detection ✅
 - [x] Review / CI / Deployment / Workflow bottleneck detection (rule conditions above)
 - [x] Anomaly detection: rolling averages, % change, Z-score, baseline comparison
 - [x] Severity (LOW/MEDIUM/HIGH/CRITICAL) + evidence stored with each detection
 - **DoD:** Simulator bottleneck scenarios automatically produce the expected detections.
 
-### Phase 10 — Insights Engine ✅
-- [x] Rule-based insights (e.g., backlog ↑ + turnaround ↑ ⇒ “Review flow is becoming a bottleneck”)
+### Phase 11 — Feature Pipeline
+- [ ] Setup `ml/features/` store.
+- **DoD:** ML features extracted automatically per period.
+
+### Phase 12 — Model Training & Registry
+- [ ] Train global models with Org/Team adaptation (strictly no individual modeling).
+- [ ] Register in `configuration.model_registry`.
+- **DoD:** Trained ML models stored and versioned.
+
+### Phase 13 — Risk Prediction
+- [ ] Risk prediction for deployment failure / incident spikes.
+- **DoD:** Risk API returns prediction probabilities.
+
+### Phase 14 — ML Anomaly Detection
+- [ ] Isolation Forests to catch anomalies.
+- **DoD:** ML identifies multi-metric outliers.
+
+### Phase 15 — Fusion Engine
+- [ ] Implement `FusionEngine` to merge Rules + Stats + ML with Evidence and Confidence.
+- **DoD:** Every insight has a confidence score from the fused tiers.
+
+### Phase 16 — Insights Engine ✅
 - [x] Insight structure + lifecycle (Detected→Active→Reviewed→Resolved→Archived)
 - **DoD:** CodeSense auto-explains significant changes via deterministic rules.
 
-### Phase 11 — Frontend Foundation
+### Phase 17 — Frontend Foundation
 - [ ] React+TS app: routing, API client, shared UI
 - [ ] Layout: sidebar, header, team selector, time-range selector, main content, user menu
 - [ ] Navigation (Overview, Health, Delivery, Development, CI/CD, Reliability, Insights, Anomalies, Bottlenecks, Trends, Integrations, Simulator, AI Analysis, Settings)
 - **DoD:** Navigate all major sections.
 
-### Phase 12 — Dashboards
+### Phase 18 — Dashboards
 - [ ] Overview (score, change, dimension scores, delivery/devel/CI-CD/reliability summaries, active bottlenecks/anomalies, latest insights)
 - [ ] Health dashboard (score → components → trend → contributing metrics → evidence)
 - [ ] Delivery, Development, CI/CD, Reliability, Insights dashboards with drill-down
 - **DoD:** User can operate CodeSense end-to-end on simulator data.
 
-### Phase 13 — AI Intelligence Layer (ONLY after deterministic analytics work)
+### Phase 19 — LLM Explainer (ONLY after deterministic analytics work)
 - [ ] Privacy gateway: strip names/emails/usernames/IDs, exclude raw payloads + individual metrics, validate payload (strictly enforced for both Cloud and Local LLMs)
 - [ ] Use cases in order: score explanation → anomaly explanation → bottleneck explanation → trend summary → investigation suggestions
 - [ ] Synchronous real-time generation (blocks request until LLM replies, no async background job queue needed for MVP)
 - [ ] OpenRouter-compatible model; graceful failure fallback to structured insights
 - **DoD:** AI explains team-level analytics **without receiving any developer identity**.
 
-### Phase 14 — Privacy & Offline Mode
+### Phase 20 — Privacy & Offline Mode
 - [ ] Privacy audit (no individual scores/rankings, restricted raw access)
 - [ ] Small-team controls: min aggregation thresholds, restricted drill-down, RBAC, masking
 - [ ] Internet-available → Normal; unavailable → Offline (core keeps working, AI unavailable)
 - **DoD:** Core analytics operate with no Internet; UI clearly marks AI offline.
 
-### Phase 15 — Real Provider Integrations (only after simulator validates the whole pipeline)
+### Phase 21 — Real Provider Integrations (only after simulator validates the whole pipeline)
 - [ ] First provider: **GitHub** → GitLab → Jira → CI/CD
 - [ ] Per provider: auth, API client, pagination, rate limits, event retrieval, webhooks, mapping, errors, sync state
 - [ ] Cross-provider test: equivalent events from GitHub & GitLab → same canonical type
 - **DoD:** Analytics work identically regardless of provider.
 
-### Phase 16 — Authentication & RBAC
+### Phase 22 — Authentication & RBAC
 - [ ] Auth, sessions/tokens, org & team-level scoping
 - [ ] Roles: ADMIN / ENGINEERING_LEADER / ENGINEERING_MANAGER / TECH_LEAD / ANALYST / DEVELOPER
 - [ ] Protect APIs + dashboard routes
 - **DoD:** Users only see data their role/team permits.
 
-### Phase 17 — Testing & Validation
+### Phase 23 — Testing & Validation
 - [ ] Unit: validation, dedup, normalization, metrics, health score, anomaly/bottleneck, privacy filtering
 - [ ] Integration: Simulator→Ingestion→Raw→Canonical→Analytics→Dashboard
 - [ ] Privacy: attempt to send name/email/ID/individual metrics → expect REQUEST BLOCKED
@@ -355,19 +407,25 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [ ] Performance: ingestion rate, API latency, DB queries, dashboard load, analytics latency
 - **DoD:** All critical tests pass.
 
-### Phase 18 — Deployment
+### Phase 24 — Deployment
 - [ ] Docker services: `codesense-api`, `codesense-worker` (optional), `codesense-simulator`, `postgres`, `codesense-dashboard`, `nginx` (Redis optional/deferred, DB is sufficient for MVP)
 - [ ] `docker-compose.yml`: networking, volumes, env, health checks, restart policies
 - [ ] DB persistence across restarts; logging; backup/restore
 - **DoD:** Deploy from scratch; restart without data loss.
 
-### Phase 19–21 — Observability, Security Hardening, Documentation
+### Phase 25 — Observability
 - [ ] Metrics/logs: API (count/latency/errors), ingestion (received/processed/failed/dupes), DB, analytics, connectors
-- [ ] Security: no hard-coded secrets, authz validation, rate limiting, input validation, SQLi/XSS/CSRF review, secret-leak review, AI identity-leak review
-- [ ] Docs: architecture, backend-schema, api, simulator, metrics, health-score, privacy, offline-mode, integrations, deployment, testing, troubleshooting + README
-- **DoD:** No critical security issues; system is documented & observable.
+- **DoD:** System is observable.
 
-### Phase 22 — Final End-to-End Validation (7 tests)
+### Phase 26 — Security Hardening
+- [ ] Security: no hard-coded secrets, authz validation, rate limiting, input validation, SQLi/XSS/CSRF review, secret-leak review, AI identity-leak review
+- **DoD:** No critical security issues.
+
+### Phase 27 — Documentation
+- [ ] Docs: architecture, backend-schema, api, simulator, metrics, health-score, privacy, offline-mode, integrations, deployment, testing, troubleshooting + README
+- **DoD:** System is documented.
+
+### Phase 28 — Final End-to-End Validation (7 tests)
 1. Normal engineering → stable score
 2. Review bottleneck → score ↓, bottleneck + insight generated
 3. CI bottleneck → CI reliability ↓, score ↓, CI bottleneck detected
@@ -377,7 +435,7 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 7. Offline → core works, AI unavailable
 - **DoD:** All seven scenarios work correctly.
 
-### Phase 23 — Final Demonstration (18-step scripted walkthrough)
+### Phase 29 — Final Demonstration (18-step scripted walkthrough)
 Open app → architecture → start simulator → normal activity → health score → switch to review bottleneck → live metric changes → score drops → open bottlenecks → open detected review bottleneck → show evidence → AI explanation → show privacy-safe payload → disable Internet → core still works → AI unavailable → switch to recovery → score recovers.
 
 ---
@@ -388,8 +446,9 @@ The complete workflow runs without manual intervention:
 
 ```
 Real-Time Simulator → Ingestion API → Immutable Raw Data → Canonical Data
-→ Analytics Engine → Engineering Health Score → Anomaly & Bottleneck Detection
-→ Insights Engine → CodeSense Dashboard → Optional AI Explanation
+→ Analytics Engine → Engineering Health Score → ML Models
+→ Fusion Engine (Rules+Stats+ML) → Insights Engine → CodeSense Dashboard
+→ Optional AI Explanation
 ```
 
 ### MVP acceptance highlights (from PRD §37)
@@ -426,6 +485,7 @@ Real-Time Simulator → Ingestion API → Immutable Raw Data → Canonical Data
 | Offline regression | Dedicated offline test suite (Phase 17.4) |
 | Non-explainable score | Score→Dimension→Metric→Evidence chain enforced in schema + UI (Phase 8/12) |
 | Scope creep (jumping to AI/dashboards/providers early) | Chronological phase gates with DoD per phase |
+| Infrastructure failure | Adhere to `INFRASTRUCTURE.md` best practices |
 
 ---
 

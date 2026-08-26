@@ -1,4 +1,48 @@
 services:
+  # ─── Primary Database ────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: codesense-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-codesense}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - home-server-backend
+
+  # ─── Redis (cache + job broker) ──────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: codesense-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - home-server-backend
+
+  # ─── FastAPI Backend ─────────────────────────────────────────────
   backend:
     build:
       context: .
@@ -6,23 +50,75 @@ services:
     container_name: codesense-backend
     restart: unless-stopped
     environment:
-      POSTGRES_SERVER: ${POSTGRES_SERVER}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      APP_NAME: ${APP_NAME}
-      APP_ENV: ${APP_ENV}
-      API_V1_STR: ${API_V1_STR}
-      SECRET_KEY: ${SECRET_KEY}
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
-      LLM_MODEL: ${LLM_MODEL}
-      AI_GATEWAY_URL: ${AI_GATEWAY_URL}
+      POSTGRES_SERVER: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-codesense}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      APP_NAME: ${APP_NAME:-CodeSense}
+      APP_ENV: ${APP_ENV:-production}
+      API_V1_STR: ${API_V1_STR:-/api/v1}
+      SECRET_KEY: ${SECRET_KEY:-changeme}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ENABLE_REDIS: "true"
+      ENABLE_METRICS: "true"
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      AI_GATEWAY_URL: ${AI_GATEWAY_URL:-}
     ports:
       - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     networks:
       - home-server-backend
 
+  # ─── Celery Worker ───────────────────────────────────────────────
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: codesense-worker
+    restart: unless-stopped
+    command: >
+      celery -A backend.app.worker.celery_app.celery_app worker
+      --loglevel=info
+      --concurrency=${WORKER_CONCURRENCY:-2}
+      --queues=default
+    environment:
+      POSTGRES_SERVER: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-codesense}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      APP_NAME: ${APP_NAME:-CodeSense}
+      APP_ENV: ${APP_ENV:-production}
+      SECRET_KEY: ${SECRET_KEY:-changeme}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ENABLE_REDIS: "true"
+      ENABLE_WORKER: "true"
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - home-server-backend
+
+  # ─── Simulator (standalone external data source) ─────────────────
   simulator:
     build:
       context: .
@@ -30,15 +126,39 @@ services:
     container_name: codesense-simulator
     restart: unless-stopped
     environment:
-      SIMULATOR_SCENARIO: NORMAL
-      SIMULATOR_TICK_INTERVAL_SECONDS: 5
-      BACKEND_URL: http://codesense-backend:8000
+      SIMULATOR_SCENARIO: ${SIMULATOR_SCENARIO:-NORMAL}
+      SIMULATOR_TICK_INTERVAL_SECONDS: ${SIMULATOR_TICK_INTERVAL_SECONDS:-5}
+      BACKEND_URL: http://backend:8000
     ports:
       - "8001:8001"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - home-server-backend
+
+  # ─── Prometheus ──────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: codesense-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+    ports:
+      - "9090:9090"
+    networks:
+      - home-server-backend
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
 
 networks:
   home-server-backend:

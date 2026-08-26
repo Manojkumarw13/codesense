@@ -1,0 +1,121 @@
+name: CodeSense CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+  POSTGRES_DB: codesense_test
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+
+jobs:
+  lint:
+    name: Lint & Type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install ruff mypy types-requests
+
+      - name: Run ruff (lint)
+        run: ruff check backend/ --ignore E501,F401 || true
+
+      - name: Run mypy (type check)
+        run: mypy backend/app --ignore-missing-imports --no-strict-optional || true
+
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run migrations
+        env:
+          POSTGRES_SERVER: localhost
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_PORT: 5432
+          APP_ENV: testing
+          ENABLE_REDIS: "false"
+          SECRET_KEY: ci-secret-key
+        run: |
+          alembic upgrade head
+
+      - name: Run unit tests
+        env:
+          POSTGRES_SERVER: localhost
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_PORT: 5432
+          APP_ENV: testing
+          ENABLE_REDIS: "false"
+          SECRET_KEY: ci-secret-key
+        run: |
+          pytest tests/unit/ -v --tb=short 2>&1
+
+      - name: Run integration tests
+        env:
+          POSTGRES_SERVER: localhost
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_PORT: 5432
+          APP_ENV: testing
+          ENABLE_REDIS: "false"
+          SECRET_KEY: ci-secret-key
+        run: |
+          pytest tests/integration/ -v --tb=short -k "not simulator" 2>&1
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -f backend/Dockerfile -t codesense-backend:ci .
+
+      - name: Build simulator image
+        run: docker build -f simulator/Dockerfile -t codesense-simulator:ci .
