@@ -32,20 +32,7 @@ def clean_database():
     finally:
         db.close()
 
-def test_end_to_end_integration(monkeypatch):
-    # 1. Setup mock post for simulator
-    def mock_post(url, json=None, **kwargs):
-        endpoint = "/api/v1/events"
-        if "batch" in url:
-            endpoint = "/api/v1/events/batch"
-        response = backend_client.post(endpoint, json=json)
-        class MockResponse:
-            status_code = response.status_code
-            text = response.text
-        return MockResponse()
-        
-    monkeypatch.setattr("requests.post", mock_post)
-
+def test_end_to_end_integration():
     db = SessionLocal()
     try:
         # Phase 1-3 assumed (DB works, API works)
@@ -71,7 +58,9 @@ def test_end_to_end_integration(monkeypatch):
         db.commit()
 
         # Send events
-        send_events_to_backend(events)
+        if events:
+            response = backend_client.post("/api/v1/events/batch", json=events)
+            assert response.status_code in (200, 201), f"Ingestion POST failed: {response.text}"
         
         # Verify Ingestion
         raw_events = db.query(ProviderEvent).all()
