@@ -25,10 +25,10 @@ def test_migration_upgrade_and_downgrade():
     # Upgrade to head
     command.upgrade(alembic_cfg, "head")
 
-    # Verify all 34 tables are restored
+    # Verify all 36 tables are restored
     with engine.connect() as conn:
         result = conn.execute(
             text("SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('raw', 'core', 'analytics', 'configuration', 'audit')")
         )
         count = result.scalar()
-        assert count == 34
+        assert count == 36
