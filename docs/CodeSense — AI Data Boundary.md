@@ -129,6 +129,8 @@ Sanitized Metrics
 Anonymized Trends
 Aggregated Engineering Information
 Approved Context
+ML Training Data (Team/Org/Global only)
+ML Model Inference Data
 
 
 ZONE 4 — EXTERNAL AI

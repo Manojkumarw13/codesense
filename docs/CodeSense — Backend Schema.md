@@ -1401,6 +1401,51 @@ CREATE TABLE analytics.engineering_trends (
 ```
 
 ```sql
+CREATE TABLE analytics.ml_features (
+    id UUID PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES core.organizations(id),
+    team_id UUID REFERENCES core.teams(id),
+    target_entity_type VARCHAR(50) NOT NULL,
+    target_entity_id UUID NOT NULL,
+    feature_vector JSONB NOT NULL,
+    generated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE configuration.model_registry (
+    id UUID PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    version VARCHAR(50) NOT NULL,
+    scope VARCHAR(50) NOT NULL, -- GLOBAL, ORG, TEAM
+    organization_id UUID REFERENCES core.organizations(id),
+    team_id UUID REFERENCES core.teams(id),
+    artifact_path TEXT NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE analytics.ml_predictions (
+    id UUID PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES core.organizations(id),
+    model_id UUID NOT NULL REFERENCES configuration.model_registry(id),
+    prediction_type VARCHAR(50) NOT NULL,
+    target_entity_id UUID NOT NULL,
+    score DOUBLE PRECISION NOT NULL,
+    confidence DOUBLE PRECISION NOT NULL,
+    evidence JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE analytics.training_jobs (
+    id UUID PRIMARY KEY,
+    model_registry_id UUID NOT NULL REFERENCES configuration.model_registry(id),
+    status VARCHAR(30) NOT NULL,
+    metrics JSONB,
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ
+);
+```
+
+```sql
 CREATE TABLE analytics.ai_insight_requests (
     id UUID PRIMARY KEY,
     organization_id UUID NOT NULL REFERENCES core.organizations(id),
@@ -1610,8 +1655,8 @@ The CodeSense backend follows this rule:
                      │
         ┌────────────┼────────────┐
         ▼            ▼            ▼
-     Health       Anomaly      Bottleneck
-      Score       Detection     Detection
+     Health       Hybrid ML    Fusion Engine
+      Score         Engine    (Rules+Stats+ML)
         │            │            │
         └────────────┼────────────┘
                      ▼

@@ -28,7 +28,11 @@ External Engineering Platforms
             ↓
       Analytics Engine
             ↓
+    Feature Extraction (ML)
+            ↓
  Engineering Health Engine
+            ↓
+       Fusion Engine
             ↓
       ┌─────┴─────┐
       ↓           ↓
@@ -50,7 +54,11 @@ Canonical Data
    ↓
 Analytics
    ↓
+Feature Extraction
+   ↓
 Engineering Health
+   ↓
+Fusion Engine (Insights/Anomalies)
    ↓
 AI Insights
 ```
@@ -761,7 +769,49 @@ Render Dashboard
 
 ---
 
-# 24. AI Data Flow
+# 24. ML Feature Flow
+
+```text
+Canonical Data & Analytics
+        ↓
+Feature Pipeline (Team/Org Scoped)
+        ↓
+Feature Store (`analytics.ml_features`)
+```
+
+# 25. ML Prediction Flow
+
+```text
+Feature Store
+        ↓
+Inference API
+        ↓
+Global Model (Org/Team Adapted)
+        ↓
+Risk Predictions & Anomalies (Confidence, Evidence)
+        ↓
+Fusion Engine
+```
+
+# 26. Fusion Flow
+
+```text
+ML Predictions
+Statistical Triggers
+Rule-based Triggers
+        ↓
+Fusion Engine
+        ↓
+Deduplication & Confidence Scoring
+        ↓
+Unified Insights / Anomalies
+        ↓
+Dashboard / AI Gateway
+```
+
+---
+
+# 27. AI Data Flow
 
 AI is a downstream consumer of approved analytical information.
 

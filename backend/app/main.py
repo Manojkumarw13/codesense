@@ -4,8 +4,10 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.api.endpoints import events, health, risk
+from backend.app.api.endpoints import anomalies, bottlenecks, events, health, insights, risk
+from backend.app.api.endpoints import health_score as health_score_endpoint
 from backend.app.api.endpoints import metrics as metrics_endpoint
+from backend.app.api.endpoints import ml as ml_endpoint
 from backend.app.core.database import SessionLocal
 from backend.app.core.exceptions import register_exception_handlers
 from backend.app.core.logging import setup_logging
@@ -52,6 +54,11 @@ app.include_router(health.router, prefix=settings.API_V1_STR, tags=["health"])
 app.include_router(events.router, prefix=settings.API_V1_STR, tags=["events"])
 app.include_router(metrics_endpoint.router, prefix=settings.API_V1_STR, tags=["observability"])
 app.include_router(risk.router, prefix=settings.API_V1_STR, tags=["risk"])
+app.include_router(anomalies.router, prefix=settings.API_V1_STR, tags=["anomalies"])
+app.include_router(bottlenecks.router, prefix=settings.API_V1_STR, tags=["bottlenecks"])
+app.include_router(insights.router, prefix=settings.API_V1_STR, tags=["insights"])
+app.include_router(health_score_endpoint.router, prefix=settings.API_V1_STR, tags=["health-score"])
+app.include_router(ml_endpoint.router, prefix=settings.API_V1_STR, tags=["ml"])
 
 @app.get("/")
 def read_root():

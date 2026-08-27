@@ -100,16 +100,22 @@ The system shall:
                               │
               ┌───────────────┼────────────────┐
               ▼               ▼                ▼
-       ┌─────────────┐ ┌─────────────┐ ┌──────────────┐
-       │ Metric      │ │ Health Score│ │ Trend /      │
-       │ Engine      │ │ Engine      │ │ Anomaly      │
-       └──────┬──────┘ └──────┬──────┘ └──────┬───────┘
-              └───────────────┼────────────────┘
+       ┌─────────────┐ ┌─────────────┐ ┌──────────────┐ ┌──────────────┐
+       │ Metric      │ │ Health Score│ │ Trend /      │ │ ML Engine    │
+       │ Engine      │ │ Engine      │ │ Anomaly      │ │ & Prediction │
+       └──────┬──────┘ └──────┬──────┘ └──────┬───────┘ └──────┬───────┘
+              └───────────────┼────────────────────────────────┘
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│                     Fusion Layer                             │
+│ Rules + Stats + ML (Evidence & Confidence)                   │
+└─────────────────────────────┬────────────────────────────────┘
+                              │
                               ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                    Insight Layer                             │
 │                                                              │
-│ Bottlenecks │ Anomalies │ Explanations │ Recommendations     │
+│ Bottlenecks │ Anomalies │ Risk Predictions │ Recommendations │
 └─────────────────────────────┬────────────────────────────────┘
                               │
                   ┌───────────┴────────────┐
@@ -139,6 +145,7 @@ canonical/
 metrics/
 health_score/
 anomaly_detection/
+ml/
 insights/
 privacy/
 ai/
@@ -206,7 +213,7 @@ Reasons:
 - Good REST API support
 - Pydantic validation
 - Async capabilities
-- Easy integration with ML/AI libraries
+- Easy integration with ML/AI libraries (`scikit-learn`, `xgboost`, `prophet`)
 - Suitable for the simulator
 - Suitable for academic prototype development
 
@@ -274,6 +281,13 @@ The system should be containerized using:
 
 - Docker
 - Docker Compose
+
+## 5.7 Infrastructure & Observability
+
+Refer to `INFRASTRUCTURE.md` for complete requirements. Core elements include:
+- Redis (caching, queues)
+- Prometheus & Grafana (metrics)
+- OpenTelemetry (distributed tracing)
 
 ---
 
@@ -384,6 +398,15 @@ Example:
 - Source/provider must be recorded.
 - Duplicate detection must be supported.
 - Raw events must be retrievable by authorized users/services.
+
+---
+
+# 6.8 ML Engine
+
+The ML Engine manages model training and inference.
+1. **Feature Pipeline**: Transforms canonical data into ML features.
+2. **Model Registry**: Tracks global models (adapted to orgs/teams). No individual modeling.
+3. **Inference API**: Serves predictions (risk, anomalies) internally to the FusionEngine.
 
 ---
 
@@ -874,33 +897,18 @@ deployment_duration ↑
 
 ---
 
-# 15. Anomaly Detection
+# 15. ML-Powered Anomaly & Hybrid Detection
 
-The first implementation may use statistical baseline detection.
+The detection system must use a hybrid approach (FusionEngine) merging:
 
-Possible methods:
+### Statistical Rules
+- Z-score `z = (x - μ) / σ`
+- Rolling baseline (7-day / 30-day)
+- Percentage change
 
-### Z-score
-
-```text
-z = (x - μ) / σ
-```
-
-### Rolling baseline
-
-Compare the current period against:
-
-```text
-7-day rolling average
-30-day rolling average
-```
-
-### Percentage change
-
-```text
-change% =
-(current - baseline) / baseline × 100
-```
+### ML Methods
+- Prophet (time-series forecasting)
+- Isolation Forests (multivariate anomalies)
 
 The detection system must record:
 
@@ -917,7 +925,22 @@ confidence
 
 ---
 
-# 16. Insight Engine
+# 16. Risk Prediction
+
+The platform shall predict engineering risks via ML (e.g., `xgboost`).
+Examples include:
+- Likelihood of a deployment failure.
+- Likelihood of an incident spike.
+
+Requirements for risk prediction:
+- Outputs must include a probability/risk score.
+- Must provide Evidence (contributing metrics/factors).
+- Must provide a Confidence level.
+- Must be calculated at the Team or Organization level (never Individual).
+
+---
+
+# 16.1 Insight Engine
 
 The insight engine converts analytical results into structured insights.
 
@@ -1181,12 +1204,14 @@ GET /api/v1/health-score
 
 ---
 
-## 21.6 Insights, Anomalies, and Bottlenecks
+## 21.6 Insights, Anomalies, Bottlenecks, and Risk
 
 ```http
 GET /api/v1/insights
 GET /api/v1/anomalies
 GET /api/v1/bottlenecks
+GET /api/v1/risks
+GET /api/v1/risks/predictions
 ```
 
 ---
@@ -1252,6 +1277,9 @@ analytics.metrics
 analytics.health_scores
 analytics.anomalies
 analytics.insights
+analytics.ml_models
+analytics.ml_features
+analytics.risk_predictions
 ```
 
 ---
@@ -1952,6 +1980,7 @@ codesense/
 │   │   ├── metrics/
 │   │   ├── health_score/
 │   │   ├── anomaly_detection/
+│   │   ├── ml/
 │   │   ├── insights/
 │   │   ├── privacy/
 │   │   ├── ai/

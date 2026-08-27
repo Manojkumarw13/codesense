@@ -2821,3 +2821,64 @@ ACCEPTANCE_TESTS.md
 `TASKS.md` is the **execution roadmap** for CodeSense.
 
 The coding agent should use it to determine **what to implement next**, while `AGENTS.md` determines **how the implementation must be performed** and the other architecture documents determine **what the system must ultimately do**.
+
+---
+
+# PHASE 25 — Hybrid ML
+
+## P25.1 — Feature Pipeline
+
+**Status:** [ ]  
+**Priority:** High  
+
+Extract and store features for global/org/team scopes. No individual developer modeling.
+
+---
+
+## P25.2 — Model Training
+
+**Status:** [ ]  
+**Priority:** High  
+**Depends on:** P25.1
+
+Train models based on extracted features.
+
+---
+
+## P25.3 — Risk Prediction
+
+**Status:** [ ]  
+**Priority:** High  
+**Depends on:** P25.2
+
+Predict risks with mandatory evidence and confidence.
+
+---
+
+## P25.4 — ML Anomaly
+
+**Status:** [ ]  
+**Priority:** High  
+**Depends on:** P25.2
+
+Detect anomalies using Hybrid ML models.
+
+---
+
+## P25.5 — Fusion Engine
+
+**Status:** [ ]  
+**Priority:** High  
+**Depends on:** P25.4
+
+Merge Rules + Stats + ML for a consolidated prediction API.
+
+---
+
+## P25.6 — Infrastructure Setup (Redis, Workers)
+
+**Status:** [ ]  
+**Priority:** High  
+**Depends on:** P25.5
+
+Configure Redis and Workers for ML job execution.

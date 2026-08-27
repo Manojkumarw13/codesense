@@ -139,6 +139,17 @@ These acceptance tests define the conditions that CodeSense must satisfy before 
 
 ---
 
+### AT-12B — Hybrid ML
+- [ ] ML Anomaly detection accurately identifies deviations.
+- [ ] Risk Prediction accuracy meets baseline targets with mandatory `confidence` and `evidence`.
+- [ ] Dedicated Fusion Engine successfully provides fallback and merges Rules + Stats + ML.
+- [ ] Model training executes successfully at Global, Org, and Team scopes without individual developer modeling.
+- [ ] ML offline resilience ensures graceful fallback when disconnected from cloud.
+
+**Expected Result:** The Hybrid ML engine operates safely, providing explainable and scoped predictions.
+
+---
+
 ### AT-13 — Role-Based Access Control
 - [ ] Authorized users can access the features assigned to their roles.
 - [ ] Unauthorized users cannot access restricted information.

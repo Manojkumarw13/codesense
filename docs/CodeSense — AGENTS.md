@@ -307,6 +307,14 @@ SQLAlchemy
 Alembic
 ```
 
+## ML / Hybrid ML
+
+```text
+scikit-learn (sklearn)
+xgboost
+prophet
+```
+
 ## Database
 
 ```text
@@ -1459,6 +1467,19 @@ Before implementing an AI feature:
 
 ---
 
+# 48.5 ML Dev Checklist
+
+Before implementing ML features:
+
+```text
+[ ] Confirm Global/Org/Team scope (No individual modeling)
+[ ] Feature pipeline does not leak PII
+[ ] Predictions output Confidence and Evidence
+[ ] Integrate with FusionEngine (Rules+Stats+ML)
+```
+
+---
+
 # 49. New Database Table Checklist
 
 Before adding a table:
@@ -1805,7 +1826,11 @@ If something cannot be verified, explicitly state it.
 │                                             │
 │ 9. Core analytics must work offline.        │
 │                                             │
-│ 10. Do not silently change locked          │
+│ 10. Start simple, don't over-engineer       │
+│     infrastructure (rules from              │
+│     INFRASTRUCTURE.md).                     │
+│                                             │
+│ 11. Do not silently change locked          │
 │     requirements.                           │
 │                                             │
 └─────────────────────────────────────────────┘

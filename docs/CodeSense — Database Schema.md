@@ -798,7 +798,70 @@ ANOMALY
 
 ---
 
-# 31. AI Tables
+# 31. ML Architecture Tables
+
+## 31.1 analytics.ml_features
+
+Stores extracted features for ML models.
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK |
+| organization_id | UUID | FK |
+| team_id | UUID | FK |
+| target_entity_type | VARCHAR(50) | |
+| target_entity_id | UUID | |
+| feature_vector | JSONB | |
+| generated_at | TIMESTAMPTZ | |
+
+## 31.2 analytics.ml_predictions
+
+Stores model inferences with required evidence and confidence.
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK |
+| organization_id | UUID | FK |
+| model_id | UUID | FK |
+| prediction_type | VARCHAR(50) | |
+| target_entity_id | UUID | |
+| score | DOUBLE PRECISION | |
+| confidence | DOUBLE PRECISION | NOT NULL |
+| evidence | JSONB | NOT NULL |
+| created_at | TIMESTAMPTZ | |
+
+## 31.3 configuration.model_registry
+
+Tracks global, org-adapted, and team-adapted models. No individual developer modeling.
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK |
+| name | VARCHAR(150) | |
+| version | VARCHAR(50) | |
+| scope | VARCHAR(50) | GLOBAL, ORG, TEAM |
+| organization_id | UUID | FK, nullable |
+| team_id | UUID | FK, nullable |
+| artifact_path | TEXT | |
+| status | VARCHAR(30) | |
+| created_at | TIMESTAMPTZ | |
+
+## 31.4 analytics.training_jobs
+
+Tracks model training tasks.
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK |
+| model_registry_id | UUID | FK |
+| status | VARCHAR(30) | |
+| metrics | JSONB | |
+| started_at | TIMESTAMPTZ | |
+| completed_at | TIMESTAMPTZ | |
+
+---
+
+# 32. AI Tables
 
 ## 31.1 ai_insight_requests
 

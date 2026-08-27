@@ -349,12 +349,14 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Risk prediction for deployment failure / incident spikes.
 - **DoD:** Risk API returns prediction probabilities.
 
-### Phase 14 — ML Anomaly Detection
-- [ ] Isolation Forests to catch anomalies.
+### Phase 14 — ML Anomaly Detection ✅
+- [x] Isolation Forests to catch anomalies (global + team-adapted models, multivariate detection).
+- [x] ML anomaly API: `GET /ml/predictions`, `GET /ml/predictions/anomaly`, `POST /ml/detect`, evidence with top contributors & anomaly score.
 - **DoD:** ML identifies multi-metric outliers.
 
-### Phase 15 — Fusion Engine
-- [ ] Implement `FusionEngine` to merge Rules + Stats + ML with Evidence and Confidence.
+### Phase 15 — Fusion Engine ✅
+- [x] Implement `FusionEngine` to merge Rules + Stats + ML with Evidence and Confidence (weighted fusion 0.5 ML + 0.3 Stats + 0.2 Rules, fallback chain, corroboration boost).
+- [x] Unified insights via `POST /ml/fusion` and `GET /ml/fusion/status`; APIs expose `GET /anomalies`, `GET /bottlenecks`, `GET /insights`, `GET /health-score` with evidence & confidence.
 - **DoD:** Every insight has a confidence score from the fused tiers.
 
 ### Phase 16 — Insights Engine ✅

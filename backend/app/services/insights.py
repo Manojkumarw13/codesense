@@ -43,7 +43,14 @@ class InsightsEngine:
             # Simple content generation based on deterministic rules
             content = f"Deterministic Analysis: {b.description}\n\nEvidence:\n"
             for k, v in b.evidence.items():
-                content += f"- {k}: {v:.2f}% change\n"
+                try:
+                    # Some evidence values may be nested or non-numeric
+                    if isinstance(v, (int, float)):
+                        content += f"- {k}: {v:.2f}% change\n"
+                    else:
+                        content += f"- {k}: {v}\n"
+                except Exception:
+                    content += f"- {k}: {v}\n"
 
             insight = Insight(
                 id=uuid.uuid4(),
@@ -68,23 +75,46 @@ class InsightsEngine:
             metric = self.db.query(MetricDefinition).get(a.metric_id)
             m_name = metric.name if metric else "Unknown Metric"
             
-            content = f"Statistical Anomaly Detected for {m_name}.\n"
-            content += f"Observed {a.observed_value:.2f} vs Baseline {a.baseline_value:.2f}.\n"
-            content += f"This represents a {a.change_percent:.2f}% shift from normal patterns."
+            # Handle ML-generated anomalies which may have None baseline/change and ML-specific evidence
+            is_ml = a.evidence and isinstance(a.evidence, dict) and "ml_anomaly_score" in a.evidence
+            if is_ml:
+                content = f"ML Anomaly Detected for {m_name} (multivariate).\n"
+                score = a.observed_value if a.observed_value is not None else a.evidence.get("ml_anomaly_score", 0)
+                content += f"Anomaly score: {score:.4f} (negative => outlier).\n"
+                if a.confidence is not None:
+                    content += f"Confidence: {a.confidence:.2f}\n"
+                top = a.evidence.get("top_contributors", {})
+                if top:
+                    content += "Top contributors: " + ", ".join(list(top.keys())[:3]) + ".\n"
+            else:
+                obs = a.observed_value if a.observed_value is not None else 0
+                base = a.baseline_value if a.baseline_value is not None else 0
+                chg = a.change_percent if a.change_percent is not None else 0
+                content = f"Statistical Anomaly Detected for {m_name}.\n"
+                content += f"Observed {obs:.2f} vs Baseline {base:.2f}.\n"
+                content += f"This represents a {chg:.2f}% shift from normal patterns."
 
+            # Determine generated_by based on evidence origin
+            gen_by = "STATISTICAL_ENGINE"
+            cat = "STATISTICAL"
+            ins_type = "ANOMALY_EXPLANATION"
+            if is_ml:
+                gen_by = "ML_ENGINE"
+                cat = "ML_DETECTED"
+                ins_type = "ML_ANOMALY_EXPLANATION"
             insight = Insight(
                 id=uuid.uuid4(),
                 organization_id=team.organization_id,
                 team_id=team.id,
-                insight_type="ANOMALY_EXPLANATION",
-                category="STATISTICAL",
+                insight_type=ins_type,
+                category=cat,
                 severity=a.severity,
-                title=f"Significant deviation in {m_name}",
+                title=f"Significant deviation in {m_name}" if not is_ml else f"ML anomaly: {m_name} outlier",
                 content=content,
-                confidence=a.confidence,
+                confidence=a.confidence if a.confidence is not None else 0.6,
                 evidence=a.evidence,
                 source_metrics={"metric_id": str(a.metric_id), "metric_key": metric.metric_key if metric else None},
-                generated_by="STATISTICAL_ENGINE",
+                generated_by=gen_by,
                 status="ACTIVE",
                 created_at=now
             )

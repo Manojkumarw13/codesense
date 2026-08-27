@@ -1012,7 +1012,35 @@ Response:
 
 ---
 
-# 32. AI Insights Architecture
+# 32. Hybrid ML API
+
+Endpoints for the Hybrid ML architecture (Global -> Org -> Team scope, no individual modeling).
+
+## Get Predictions
+```http
+GET /api/v1/ml/predictions
+```
+
+## List Models
+```http
+GET /api/v1/ml/models
+```
+
+## Trigger Training
+```http
+POST /api/v1/ml/train
+```
+
+## Get Features
+```http
+GET /api/v1/ml/features
+```
+
+All predictions must return `confidence` and `evidence` fields.
+
+---
+
+# 33. AI Insights Architecture
 
 AI requests must always pass through:
 
@@ -1861,6 +1889,12 @@ The following rules are mandatory:
 ├── /analytics
 │   ├── /dashboard
 │   └── /trends
+│
+├── /ml
+│   ├── /predictions
+│   ├── /models
+│   ├── /train
+│   └── /features
 │
 ├── /health
 │   ├── /engineering

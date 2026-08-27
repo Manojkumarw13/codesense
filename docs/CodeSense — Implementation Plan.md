@@ -18,49 +18,61 @@ Phase 0: Project Definition & Finalization
       ↓
 Phase 1: Development Environment
       ↓
-Phase 2: Database Foundation
+Phase 2: Infrastructure Foundation
       ↓
-Phase 3: Backend Foundation
+Phase 3: Database Foundation
       ↓
-Phase 4: Real-Time Simulator
+Phase 4: Backend Foundation
       ↓
-Phase 5: Event Ingestion Pipeline
+Phase 5: Real-Time Simulator
       ↓
-Phase 6: Canonical Data Layer
+Phase 6: Event Ingestion Pipeline
       ↓
-Phase 7: Analytics Engine
+Phase 7: Canonical Data Layer
       ↓
-Phase 8: Engineering Health Score
+Phase 8: Analytics Engine
       ↓
-Phase 9: Bottleneck & Anomaly Detection
+Phase 9: Engineering Health Score
       ↓
-Phase 10: Insights Engine
+Phase 10: Bottleneck & Statistical Anomaly Detection
       ↓
-Phase 11: Frontend Foundation
+Phase 11: Feature Pipeline
       ↓
-Phase 12: Dashboard Implementation
+Phase 12: Model Training & Registry
       ↓
-Phase 13: AI Intelligence Layer
+Phase 13: Risk Prediction
       ↓
-Phase 14: Privacy & Offline Mode
+Phase 14: ML Anomaly Detection
       ↓
-Phase 15: Real Provider Integrations
+Phase 15: Fusion Engine
       ↓
-Phase 16: Authentication & RBAC
+Phase 16: Insights Engine
       ↓
-Phase 17: Testing & Validation
+Phase 17: Frontend Foundation
       ↓
-Phase 18: Deployment
+Phase 18: Dashboard Implementation
       ↓
-Phase 19: Observability
+Phase 19: LLM Explainer
       ↓
-Phase 20: Security Hardening
+Phase 20: Privacy & Offline Mode
       ↓
-Phase 21: Documentation
+Phase 21: Real Provider Integrations
       ↓
-Phase 22: Final End-to-End Validation
+Phase 22: Authentication & RBAC
       ↓
-Phase 23: Final Demonstration Preparation
+Phase 23: Testing & Validation
+      ↓
+Phase 24: Deployment
+      ↓
+Phase 25: Observability
+      ↓
+Phase 26: Security Hardening
+      ↓
+Phase 27: Documentation
+      ↓
+Phase 28: Final End-to-End Validation
+      ↓
+Phase 29: Final Demonstration Preparation
 ```
 
 ---
@@ -165,7 +177,7 @@ The backend starts successfully with a basic health endpoint.
 
 ---
 
-# Phase 2 — Database Foundation ✅
+# Phase 3 — Database Foundation ✅
 
 ## Objective
 
@@ -249,7 +261,7 @@ The complete MVP database schema can be created from a clean database using migr
 
 ---
 
-# Phase 3 — Backend Foundation ✅
+# Phase 4 — Backend Foundation ✅
 
 ## Objective
 
@@ -319,7 +331,27 @@ FastAPI can communicate with PostgreSQL and return reliable API responses.
 
 ---
 
-# Phase 4 — Real-Time Engineering Data Simulator ✅
+# Phase 2 — Infrastructure Foundation
+
+## Objective
+
+Set up the base infrastructure required for async processing and ML pipelines.
+
+## 1.5.1 Redis & Message Queue
+- [ ] Configure Redis connection.
+- [ ] Implement Celery or RQ for background task processing.
+
+## 1.5.2 Worker Configuration
+- [ ] Implement a base worker for event processing.
+- [ ] Implement worker telemetry (OpenTelemetry / Prometheus).
+
+### Completion Criteria
+
+Background workers can successfully pick up and process test jobs.
+
+---
+
+# Phase 5 — Real-Time Engineering Data Simulator ✅
 
 ## Objective
 
@@ -447,7 +479,7 @@ The simulator can generate realistic correlated engineering events continuously.
 
 ---
 
-# Phase 5 — Event Ingestion Pipeline ✅
+# Phase 6 — Event Ingestion Pipeline ✅
 
 ## Objective
 
@@ -531,7 +563,7 @@ The simulator can send thousands of events through the ingestion API and all val
 
 ---
 
-# Phase 6 — Canonical Data Layer ✅
+# Phase 7 — Canonical Data Layer ✅
 
 ## Objective
 
@@ -632,7 +664,7 @@ Different provider-shaped events can be converted into the same canonical model.
 
 ---
 
-# Phase 7 — Analytics Engine
+# Phase 8 — Analytics Engine
 
 ## Objective
 
@@ -724,7 +756,7 @@ All MVP metrics are calculated correctly from canonical events.
 
 ---
 
-# Phase 8 — Engineering Health Score
+# Phase 9 — Engineering Health Score
 
 ## Objective
 
@@ -824,7 +856,7 @@ CodeSense produces a reproducible and explainable team-level Engineering Health 
 
 ---
 
-# Phase 9 — Bottleneck & Anomaly Detection
+# Phase 10 — Bottleneck & Anomaly Detection
 
 ## Objective
 
@@ -904,7 +936,7 @@ The simulator's bottleneck scenarios automatically produce the expected CodeSens
 
 ---
 
-# Phase 10 — Insights Engine
+# Phase 16 — Insights Engine
 
 ## Objective
 
@@ -968,7 +1000,61 @@ CodeSense can automatically explain significant engineering changes using determ
 
 ---
 
-# Phase 11 — Frontend Foundation
+# Phase 11 — Feature Pipeline
+
+## Objective
+Convert canonical data into time-series ML features.
+
+- [ ] Implement feature extraction for PR cycle time, deployment frequency, etc.
+- [ ] Store features in `analytics.ml_features`.
+
+---
+
+# Phase 12 — Model Training
+
+## Objective
+Train global ML models and adapt them to Org/Team scopes.
+
+- [ ] Train isolation forests / prophet models for anomaly detection.
+- [ ] Train xgboost models for risk prediction.
+- [ ] Ensure strict adherence to privacy (no individual models).
+- [ ] Save models to Model Registry (`analytics.ml_models`).
+
+---
+
+# Phase 13 — Risk Prediction
+
+## Objective
+Predict likelihood of negative engineering events.
+
+- [ ] Predict deployment failures.
+- [ ] Predict incident spikes.
+- [ ] Output: Risk Score, Evidence, Confidence.
+
+---
+
+# Phase 14 — ML Anomaly Detection
+
+## Objective
+Detect complex anomalies using trained models.
+
+- [ ] Run time-series forecasting.
+- [ ] Run multivariate anomaly detection.
+- [ ] Output: Anomaly, Evidence, Confidence.
+
+---
+
+# Phase 15 — Fusion Engine
+
+## Objective
+Merge Rule-based, Statistical, and ML detections.
+
+- [ ] Implement fallback chain: ML -> Stats -> Rules.
+- [ ] Unify anomaly and insight output schema (incorporating Confidence).
+
+---
+
+# Phase 17 — Frontend Foundation
 
 ## Objective
 
@@ -1031,7 +1117,7 @@ The frontend can navigate between all major application sections.
 
 ---
 
-# Phase 12 — Dashboard Implementation
+# Phase 18 — Dashboard Implementation
 
 ## Objective
 
@@ -1140,11 +1226,11 @@ A user can operate CodeSense entirely through the dashboard using simulator-gene
 
 ---
 
-# Phase 13 — AI Intelligence Layer
+# Phase 19 — LLM Explainer
 
 ## Objective
 
-Add optional AI-powered engineering explanations.
+Add optional AI-powered engineering explanations using LLMs.
 
 **Do this only after deterministic analytics are working.**
 
@@ -1220,7 +1306,7 @@ AI can explain team-level analytics without receiving developer identity.
 
 ---
 
-# Phase 14 — Privacy & Offline Mode
+# Phase 20 — Privacy & Offline Mode
 
 ## Objective
 
@@ -1306,7 +1392,7 @@ The system can operate its core analytics without Internet connectivity.
 
 ---
 
-# Phase 15 — Real Provider Integrations
+# Phase 21 — Real Provider Integrations
 
 ## Objective
 
@@ -1390,7 +1476,7 @@ CodeSense can perform analytics independently of the original provider.
 
 ---
 
-# Phase 16 — Authentication & RBAC
+# Phase 22 — Authentication & RBAC
 
 ## Objective
 
@@ -1425,7 +1511,7 @@ Users can only access data allowed by their role and team permissions.
 
 ---
 
-# Phase 17 — Testing & Validation
+# Phase 23 — Testing & Validation
 
 ## Objective
 
@@ -1539,7 +1625,7 @@ All critical test cases pass.
 
 ---
 
-# Phase 18 — Deployment
+# Phase 24 — Deployment
 
 ## Objective
 
@@ -1616,7 +1702,7 @@ CodeSense can be deployed from scratch and restarted without losing persistent d
 
 ---
 
-# Phase 19 — Observability
+# Phase 25 — Observability
 
 ## Objective
 
@@ -1667,7 +1753,7 @@ Major system failures can be identified from logs/metrics without manually inspe
 
 ---
 
-# Phase 20 — Security Hardening
+# Phase 26 — Security Hardening
 
 ## Objective
 
@@ -1697,7 +1783,7 @@ No critical security issue remains in the MVP.
 
 ---
 
-# Phase 21 — Documentation
+# Phase 27 — Documentation
 
 ## Objective
 
@@ -1743,7 +1829,7 @@ with:
 
 ---
 
-# Phase 22 — Final End-to-End Validation
+# Phase 28 — Final End-to-End Validation
 
 ## Objective
 
@@ -1882,7 +1968,7 @@ All seven scenarios work correctly.
 
 ---
 
-# Phase 23 — Final Demonstration Preparation
+# Phase 29 — Final Demonstration Preparation
 
 ## Objective
 
@@ -2097,6 +2183,9 @@ Requirements
 Environment
      │
      ▼
+Infrastructure (Phase 1.5)
+     │
+     ▼
 Database
      │
      ▼
@@ -2123,9 +2212,12 @@ Detection
      ▼
 Insights
      │
+     ▼
+ML & Fusion (Phases 10.5-10.9)
+     │
      ├───────────────┐
      ▼               ▼
-Frontend          AI Layer
+Frontend          LLM Explainer
      │               │
      └───────┬───────┘
              ▼
@@ -2176,7 +2268,10 @@ Frontend          AI Layer
 ## Intelligence
 
 - [ ] Bottleneck detection working.
-- [ ] Anomaly detection working.
+- [ ] Statistical anomaly detection working.
+- [ ] Feature pipeline and Model training working.
+- [ ] Risk prediction working.
+- [ ] FusionEngine operational.
 - [ ] Insights working.
 
 ## Frontend
@@ -2190,12 +2285,12 @@ Frontend          AI Layer
 - [ ] Insights dashboard working.
 - [ ] Simulator dashboard working.
 
-## AI
+## AI / ML
 
 - [ ] Privacy gateway working.
 - [ ] Developer identity removed.
-- [ ] AI explanation working.
-- [ ] AI failure fallback working.
+- [ ] LLM explanation working.
+- [ ] LLM failure fallback working.
 
 ## Privacy
 

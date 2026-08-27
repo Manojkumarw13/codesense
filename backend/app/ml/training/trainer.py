@@ -46,7 +46,11 @@ class ModelTrainer:
         # Fill missing values with median for now
         numeric_df = df.drop(columns=["team_id"]).fillna(df.drop(columns=["team_id"]).median())
         
-        logger.info(f"Training Isolation Forest on {len(numeric_df)} samples...")
+        # Ensure deterministic column order (sorted) for reproducible inference
+        numeric_df = numeric_df.reindex(sorted(numeric_df.columns), axis=1)
+        feature_columns = list(numeric_df.columns)
+        
+        logger.info(f"Training Isolation Forest on {len(numeric_df)} samples with {len(feature_columns)} features...")
         model = IsolationForest(n_estimators=100, contamination=0.1, random_state=42)
         model.fit(numeric_df)
         
@@ -70,8 +74,8 @@ class ModelTrainer:
             model_type="isolation_forest",
             description="Global Anomaly Detection Model across all teams",
             file_path=model_path,
-            hyperparameters={"n_estimators": 100, "contamination": 0.1, "random_state": 42},
-            metrics={"training_samples": len(numeric_df)},
+            hyperparameters={"n_estimators": 100, "contamination": 0.1, "random_state": 42, "feature_columns": feature_columns},
+            metrics={"training_samples": len(numeric_df), "feature_columns": feature_columns, "feature_count": len(feature_columns)},
             is_active=True
         )
         self.db.add(registry_entry)
@@ -110,6 +114,8 @@ class ModelTrainer:
                 
             org_id = group["org_id"].iloc[0]
             numeric_group = group.drop(columns=["team_id", "org_id"]).fillna(group.drop(columns=["team_id", "org_id"]).median())
+            numeric_group = numeric_group.reindex(sorted(numeric_group.columns), axis=1)
+            feature_columns_team = list(numeric_group.columns)
             
             # Simple adaptation model (e.g. baseline distribution or simpler tree)
             model = IsolationForest(n_estimators=50, contamination=0.1, random_state=42)
@@ -133,8 +139,8 @@ class ModelTrainer:
                 model_type="isolation_forest",
                 description=f"Team-specific Anomaly Detection Model for team {team_id}",
                 file_path=model_path,
-                hyperparameters={"n_estimators": 50, "contamination": 0.1, "random_state": 42},
-                metrics={"training_samples": len(numeric_group)},
+                hyperparameters={"n_estimators": 50, "contamination": 0.1, "random_state": 42, "feature_columns": feature_columns_team},
+                metrics={"training_samples": len(numeric_group), "feature_columns": feature_columns_team, "feature_count": len(feature_columns_team)},
                 organization_id=uuid.UUID(org_id),
                 team_id=uuid.UUID(team_id),
                 is_active=True

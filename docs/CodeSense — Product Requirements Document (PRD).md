@@ -12,7 +12,7 @@
 
 ## 1. Executive Summary
 
-CodeSense is an engineering analytics platform that collects software-development activity from multiple engineering tools, normalizes heterogeneous provider data into a canonical analytical layer, and converts it into actionable **team-level engineering insights**.
+CodeSense is an ML-powered engineering analytics platform that collects software-development activity from multiple engineering tools, normalizes heterogeneous provider data into a canonical analytical layer, and converts it into actionable **team-level engineering insights** using a hybrid machine learning architecture.
 
 The platform is designed to answer questions such as:
 
@@ -48,7 +48,7 @@ Existing engineering analytics solutions can also create privacy concerns when m
 
 ### Vision
 
-> **Give engineering teams a trustworthy, privacy-preserving view of how their engineering system performs.**
+> **Give engineering teams a trustworthy, privacy-preserving, ML-powered view of how their engineering system performs.**
 
 CodeSense should evolve from a collection of engineering metrics into an **Engineering Intelligence Platform** capable of explaining operational patterns, detecting bottlenecks, identifying risks, and helping teams continuously improve.
 
@@ -70,7 +70,9 @@ CodeSense should evolve from a collection of engineering metrics into an **Engin
 10. Maintain strict privacy boundaries around developer identity.
 11. Remain provider-agnostic.
 12. Optionally use AI to explain analytics and generate insights.
-13. Provide role-appropriate dashboards and reports.
+13. Implement a `FusionEngine` to merge rule-based, statistical, and ML anomaly detection.
+14. Predict engineering risks (e.g., deployment failures, incident spikes).
+15. Provide role-appropriate dashboards and reports.
 
 ---
 
@@ -714,9 +716,20 @@ CodeSense:
 
 ---
 
-# 18. Anomaly Detection
+# 18. ML-Powered Anomaly & Hybrid Detection
 
-The system should identify unusual changes from historical baselines.
+The system should identify unusual changes using a `FusionEngine` that merges:
+1. Rule-based triggers.
+2. Statistical baselines (Z-score, 7/30-day rolling).
+3. Machine Learning predictions (e.g., isolation forests, prophet time-series).
+
+Model scope must strictly follow: Global Model → Org Adaptation → Team Adaptation. No individual developer modeling is permitted.
+
+Anomalies must provide Evidence + Confidence.
+
+# 18.1 Risk Prediction
+
+The system shall forecast risks (e.g., deployment failures, incident spikes) using predictive models (`xgboost`). Outputs must include Risk Score, Evidence, and Confidence metrics.
 
 Potential anomalies:
 
@@ -733,18 +746,19 @@ Anomalies should provide:
 2. When did it change?
 3. How large was the change?
 4. Which team/system was affected?
-5. Which metrics contributed?
-6. Possible contributing factors
+5. Which metrics contributed (Evidence)?
+6. Confidence score of the detection.
+7. Possible contributing factors
 
 ---
 
-# 19. AI Intelligence Layer
+# 19. AI/ML Intelligence Layer
 
-AI is an optional intelligence layer rather than a core dependency.
+AI and ML models form an intelligence layer to detect and explain patterns.
 
-## 19.1 AI Responsibilities
+## 19.1 AI/ML Responsibilities
 
-AI may:
+AI/ML may:
 
 - Summarize engineering trends
 - Explain score changes
@@ -1458,9 +1472,9 @@ The MVP is considered successful when:
 ### Intelligence
 
 - [ ] Bottlenecks can be detected.
-- [ ] Basic anomalies can be detected.
+- [ ] Basic and ML-driven anomalies can be detected with confidence scores.
 - [ ] AI explanations can be generated from sanitized aggregate data.
-- [ ] AI failure does not break core analytics.
+- [ ] AI/ML failure does not break core analytics.
 
 ### Offline
 
@@ -1632,7 +1646,6 @@ After the MVP:
 ### Phase 2
 
 - More provider connectors
-- Advanced anomaly detection
 - Custom metric definitions
 - Configurable Health Score
 - Advanced RBAC
@@ -1643,7 +1656,6 @@ After the MVP:
 
 - Local LLM support
 - Advanced causal analysis
-- Predictive engineering risk
 - Capacity forecasting
 - Intelligent recommendations
 - Organization-wide engineering intelligence

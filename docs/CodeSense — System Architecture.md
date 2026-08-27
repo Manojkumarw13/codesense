@@ -55,22 +55,23 @@ The architecture is designed around these principles:
                     │ Request Validation       │
                     └────────────┬────────────┘
                                  │
-              ┌──────────────────┼──────────────────┐
-              │                  │                  │
-              ▼                  ▼                  ▼
-     ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
-     │ Integration    │ │ Analytics      │ │ AI / Insights  │
-     │ Service        │ │ Service        │ │ Service        │
-     └───────┬────────┘ └───────┬────────┘ └───────┬────────┘
-             │                  │                  │
-             ▼                  ▼                  ▼
-     ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
-     │ Raw Event      │ │ Canonical      │ │ AI Gateway     │
-     │ Store          │ │ Analytical     │ │ / Privacy      │
-     │                │ │ Layer          │ │ Boundary       │
-     └───────┬────────┘ └───────┬────────┘ └───────┬────────┘
-             │                  │                  │
-             └──────────────────┼──────────────────┘
+              ┌──────────────────┼─────────────────────────────────┐
+              │                  │                                 │
+              ▼                  ▼                                 ▼
+     ┌────────────────┐ ┌────────────────┐ ┌────────────────────────────────┐
+     │ Integration    │ │ Analytics      │ │ AI, ML & Insights Service      │
+     │ Service        │ │ Service        │ │ - ML Inference & Fusion Layer  │
+     │                │ │                │ │ - LLM Explainer (Optional)     │
+     └───────┬────────┘ └───────┬────────┘ └───────────────┬────────────────┘
+             │                  │                          │
+             ▼                  ▼                          ▼
+     ┌────────────────┐ ┌────────────────┐ ┌────────────────────────────────┐
+     │ Raw Event      │ │ Canonical      │ │ ML Feature Store, Model Reg.,  │
+     │ Store          │ │ Analytical     │ │ & AI Privacy Boundary          │
+     │                │ │ Layer          │ │                                │
+     └───────┬────────┘ └───────┬────────┘ └───────────────┬────────────────┘
+             │                  │                          │
+             └──────────────────┼──────────────────────────┘
                                 ▼
                     ┌─────────────────────────┐
                     │     PostgreSQL          │
@@ -78,6 +79,7 @@ The architecture is designed around these principles:
                     │ Operational Data        │
                     │ Canonical Data          │
                     │ Analytics               │
+                    │ ML Models & Features    │
                     │ Configuration           │
                     └─────────────────────────┘
 ```
@@ -437,6 +439,25 @@ Engineering Signals
 CodeSense must not convert individual developer activity into an individual productivity score.
 
 Individual operational metrics may exist where necessary, subject to privacy and access controls.
+
+---
+
+# 13.5 ML Feature Store & Model Registry
+
+## Feature Store
+Transforms canonical events and metrics into time-series features (Strictly Team/Org scope).
+
+## Model Registry
+Manages versioning and serving of global ML models (e.g., Prophet, XGBoost). Individual developer modeling is permanently prohibited.
+
+---
+
+# 13.6 Fusion Engine
+A fallback hierarchy combining anomaly and insight detections:
+1. **ML Engine**: Predictive anomalies & Risk models.
+2. **Statistical Engine**: Z-score, baselines.
+3. **Rule Engine**: Threshold-based.
+The Fusion Engine normalizes outputs to provide unified insights containing Evidence and Confidence metrics.
 
 ---
 
