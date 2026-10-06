@@ -192,7 +192,7 @@ def list_raw_events(
         query = query.filter(ProviderEvent.processing_status == processing_status)
         
     total = query.count()
-    events = query.order_by(ProviderEvent.created_at.desc()).offset(skip).limit(limit).all()
+    events = query.order_by(ProviderEvent.created_at.desc(), ProviderEvent.id.desc()).offset(skip).limit(limit).all()
     
     return {
         "total": total,

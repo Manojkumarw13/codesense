@@ -29,7 +29,7 @@ def list_health_scores(
     if project_id:
         q = q.filter(HealthScore.project_id == project_id)
     total = q.count()
-    items = q.order_by(HealthScore.calculated_at.desc()).offset(skip).limit(limit).all()
+    items = q.order_by(HealthScore.calculated_at.desc(), HealthScore.id.desc()).offset(skip).limit(limit).all()
     return {"total": total, "skip": skip, "limit": limit, "items": items}
 
 

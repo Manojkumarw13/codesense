@@ -31,7 +31,7 @@ def list_models(
     if is_active is not None:
         q = q.filter(ModelRegistry.is_active == is_active)
     total = q.count()
-    items = q.order_by(ModelRegistry.created_at.desc()).offset(skip).limit(limit).all()
+    items = q.order_by(ModelRegistry.created_at.desc(), ModelRegistry.id.desc()).offset(skip).limit(limit).all()
     return {"total": total, "skip": skip, "limit": limit, "items": items}
 
 
@@ -79,7 +79,7 @@ def get_features(
     if organization_id:
         q = q.filter(MLFeatureVector.organization_id == organization_id)
     total = q.count()
-    items = q.order_by(MLFeatureVector.calculated_at.desc()).offset(skip).limit(limit).all()
+    items = q.order_by(MLFeatureVector.calculated_at.desc(), MLFeatureVector.id.desc()).offset(skip).limit(limit).all()
     return {"total": total, "skip": skip, "limit": limit, "items": items}
 
 

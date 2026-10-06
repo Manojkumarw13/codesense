@@ -32,7 +32,7 @@ def list_bottlenecks(
     if severity:
         q = q.filter(Bottleneck.severity == severity)
     total = q.count()
-    items = q.order_by(Bottleneck.detected_at.desc()).offset(skip).limit(limit).all()
+    items = q.order_by(Bottleneck.detected_at.desc(), Bottleneck.id.desc()).offset(skip).limit(limit).all()
     return {"total": total, "skip": skip, "limit": limit, "items": items}
 
 

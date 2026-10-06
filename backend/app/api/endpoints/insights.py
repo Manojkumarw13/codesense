@@ -38,7 +38,7 @@ def list_insights(
     if generated_by:
         q = q.filter(Insight.generated_by == generated_by)
     total = q.count()
-    items = q.order_by(Insight.created_at.desc()).offset(skip).limit(limit).all()
+    items = q.order_by(Insight.created_at.desc(), Insight.id.desc()).offset(skip).limit(limit).all()
     return {"total": total, "skip": skip, "limit": limit, "items": items}
 
 

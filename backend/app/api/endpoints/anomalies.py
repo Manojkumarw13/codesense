@@ -30,7 +30,7 @@ def list_anomalies(
     if severity:
         q = q.filter(Anomaly.severity == severity)
     total = q.count()
-    items = q.order_by(Anomaly.detected_at.desc()).offset(skip).limit(limit).all()
+    items = q.order_by(Anomaly.detected_at.desc(), Anomaly.id.desc()).offset(skip).limit(limit).all()
     return {"total": total, "skip": skip, "limit": limit, "items": items}
 
 
