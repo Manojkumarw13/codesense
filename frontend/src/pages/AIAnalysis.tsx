@@ -70,7 +70,8 @@ export default function AIAnalysis() {
               ))}
             </select>
           </label>
-          <button onClick={run} disabled={loading}>
+          <button className="btn" onClick={run} disabled={loading} aria-busy={loading}>
+            {loading && <span className="spinner" aria-hidden="true" />}
             {loading ? 'Explaining…' : 'Explain'}
           </button>
         </div>
