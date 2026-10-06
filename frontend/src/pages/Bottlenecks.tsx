@@ -8,6 +8,7 @@ import Loading from '../components/ui/Loading';
 import ErrorState from '../components/ui/ErrorState';
 import EmptyState from '../components/ui/EmptyState';
 import Evidence from '../components/Evidence';
+import EmptyArt from '../components/EmptyArt';
 
 export default function Bottlenecks() {
   const { teamId } = useApp();
@@ -59,6 +60,7 @@ export default function Bottlenecks() {
       </div>
       {filtered.length === 0 ? (
         <Card title="No bottlenecks">
+          <EmptyArt />
           <EmptyState message="No bottlenecks detected. Review/CI/deployment simulator scenarios produce detections." />
         </Card>
       ) : (

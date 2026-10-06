@@ -8,6 +8,7 @@ import Loading from '../components/ui/Loading';
 import ErrorState from '../components/ui/ErrorState';
 import EmptyState from '../components/ui/EmptyState';
 import Evidence from '../components/Evidence';
+import EmptyArt from '../components/EmptyArt';
 
 export default function Anomalies() {
   const { teamId } = useApp();
@@ -42,6 +43,7 @@ export default function Anomalies() {
       </div>
       {filtered.length === 0 ? (
         <Card title="No anomalies">
+          <EmptyArt />
           <EmptyState message="No anomalies detected. Bottleneck simulator scenarios produce detections." />
         </Card>
       ) : (

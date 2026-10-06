@@ -308,6 +308,70 @@ h2 {
   line-height: 1.6;
 }
 
+/* --- Page enter: opacity-only, 140ms — fast enough for frequent nav --- */
+.page-enter { animation: pageIn 140ms var(--ease-out) backwards; }
+@keyframes pageIn { from { opacity: 0; } }
+
+/* --- Skeletons: shape feedback while loading (static when reduced) --- */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+}
+.skeleton {
+  border-radius: 6px;
+  background: linear-gradient(100deg, #edf0f5 40%, #e2e8f0 50%, #edf0f5 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+.skeleton-title { height: 16px; width: 42%; margin-bottom: 12px; }
+.skeleton-line { height: 12px; margin-bottom: 8px; }
+.skeleton-card { pointer-events: none; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* --- Toasts (Sonner-style): materialize 180ms, bottom-right, dismissible --- */
+.toaster {
+  position: fixed;
+  right: 20px; bottom: 20px;
+  display: flex; flex-direction: column; gap: 10px;
+  z-index: 50;
+  max-width: min(360px, calc(100vw - 40px));
+}
+.toast {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #0f172a; color: #f1f5f9;
+  border-radius: 10px;
+  padding: 12px 12px 12px 14px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.3);
+  animation: toastIn 180ms var(--ease-out) backwards;
+  font-size: 13px;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+}
+.toast-title { font-weight: 650; }
+.toast-detail { color: #94a3b8; margin-top: 2px; }
+.toast-ok { border-left: 3px solid #22c55e; }
+.toast-bad { border-left: 3px solid #ef4444; }
+.toast-info { border-left: 3px solid #3b82f6; }
+.toast-close {
+  appearance: none; border: none; background: none;
+  color: #94a3b8; font-size: 16px; line-height: 1;
+  cursor: pointer; padding: 2px 4px; margin-left: auto;
+}
+.toast-close:hover { color: #fff; }
+
+/* --- Recharts: inherit app type, tabular numerals --- */
+.rechart { font-variant-numeric: tabular-nums; }
+.recharts-wrapper, .recharts-surface { outline: none; }
+
+/* --- Empty art: static brand motif --- */
+.empty-art { display: block; margin: 6px auto 4px; }
+
+/* --- Delta chips: static direction + tone --- */
+.delta { font-variant-numeric: tabular-nums; font-weight: 650; font-size: 12.5px; }
+.delta-up { color: var(--ok-ink); }
+.delta-down { color: var(--bad-ink); }
+
 /* --- Mobile drawer: single transform slide from the edge --- */
 @media (max-width: 860px) {
   .sidebar {
@@ -339,4 +403,5 @@ h2 {
     scroll-behavior: auto !important;
   }
   .spinner { animation: none; border-top-color: rgba(255, 255, 255, 0.45); }
+  .skeleton { animation: none; background: #edf0f5; }
 }

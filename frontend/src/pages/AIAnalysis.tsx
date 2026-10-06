@@ -8,6 +8,7 @@ import Badge from '../components/ui/Badge';
 import Loading from '../components/ui/Loading';
 import ErrorState from '../components/ui/ErrorState';
 import Evidence from '../components/Evidence';
+import { useToast } from '../components/ui/Toast';
 
 const USE_CASE_LABELS: Record<string, string> = {
   score_explanation: 'Score explanation',
@@ -24,14 +25,23 @@ export default function AIAnalysis() {
   const [result, setResult] = useState<ExplainResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   async function run() {
     setLoading(true);
     setError(null);
     try {
-      setResult(await apiClient.explain(useCase));
+      const res = await apiClient.explain(useCase);
+      setResult(res);
+      toast({
+        tone: res.source === 'CLOUD_AI' ? 'ok' : 'info',
+        title: 'Explanation ready',
+        detail: `Source: ${res.source}`,
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Request failed');
+      const message = e instanceof Error ? e.message : 'Request failed';
+      setError(message);
+      toast({ tone: 'bad', title: 'Explanation failed', detail: message });
     } finally {
       setLoading(false);
     }

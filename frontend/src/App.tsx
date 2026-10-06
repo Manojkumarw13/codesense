@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Layout from './components/layout/Layout';
 import Loading from './components/ui/Loading';
+import { ToastProvider } from './components/ui/Toast';
 import NotFound from './pages/NotFound';
 
 const Overview = lazy(() => import('./pages/Overview'));
@@ -24,6 +25,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppProvider>
+        <ToastProvider>
         <Suspense fallback={<Loading label="Loading section…" />}>
           <Routes>
             <Route element={<Layout />}>
@@ -45,6 +47,7 @@ export default function App() {
             </Route>
           </Routes>
         </Suspense>
+        </ToastProvider>
       </AppProvider>
     </BrowserRouter>
   );

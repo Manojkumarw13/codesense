@@ -3,21 +3,24 @@ import { useApp } from '../context/AppContext';
 import { useApi } from '../hooks/useApi';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
-import Loading from '../components/ui/Loading';
 import ErrorState from '../components/ui/ErrorState';
 import EmptyState from '../components/ui/EmptyState';
-import ScoreTrend from '../components/charts/ScoreTrend';
-import DimensionBars from '../components/charts/DimensionBars';
+import EmptyArt from '../components/EmptyArt';
+import { DashboardSkeleton } from '../components/ui/Skeleton';
+import { DimensionBarsChart, ScoreArea } from '../components/charts/ScoreCharts';
 
 export default function Health() {
   const { teamId, timeRange } = useApp();
   const scores = useApi(() => apiClient.listHealthScores({ limit: 100 }));
 
-  if (scores.loading) return <Loading />;
+  if (scores.loading) return <DashboardSkeleton />;
   if (scores.error) return <ErrorState message={scores.error} />;
 
   const items = scores.data ?? [];
   const latest = items[0];
+  const chrono = [...items].reverse();
+  const labelOf = (iso: string) =>
+    new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
   return (
     <div>
@@ -28,6 +31,7 @@ export default function Health() {
       </p>
       {items.length === 0 ? (
         <Card title="No scores yet">
+          <EmptyArt />
           <EmptyState message="No health scores found. Run the simulator to generate engineering events." />
         </Card>
       ) : (
@@ -46,11 +50,13 @@ export default function Health() {
               )}
             </Card>
             <Card title="Dimensions (0–100)">
-              <DimensionBars dims={latest.component_metrics} />
+              <DimensionBarsChart dims={latest.component_metrics} />
             </Card>
           </div>
           <Card title="Score history">
-            <ScoreTrend scores={[...items].reverse().map((s) => s.score)} />
+            <ScoreArea
+              data={chrono.map((s) => ({ label: labelOf(s.period_end), score: s.score }))}
+            />
             <table className="table">
               <thead>
                 <tr>

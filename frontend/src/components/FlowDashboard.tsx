@@ -4,11 +4,12 @@ import { useApi } from '../hooks/useApi';
 import { dimensionLabel } from '../types';
 import Card from './ui/Card';
 import Badge from './ui/Badge';
-import Loading from './ui/Loading';
 import ErrorState from './ui/ErrorState';
 import EmptyState from './ui/EmptyState';
 import Evidence from './Evidence';
-import ScoreTrend from './charts/ScoreTrend';
+import EmptyArt from './EmptyArt';
+import { DashboardSkeleton } from './ui/Skeleton';
+import { MiniSpark } from './charts/ScoreCharts';
 
 export interface FlowConfig {
   title: string;
@@ -29,7 +30,7 @@ export default function FlowDashboard({ config }: { config: FlowConfig }) {
   const loading = scores.loading || bottlenecks.loading || anomalies.loading || insights.loading;
   const error = scores.error ?? bottlenecks.error ?? anomalies.error ?? insights.error;
 
-  if (loading) return <Loading />;
+  if (loading) return <DashboardSkeleton />;
   if (error) return <ErrorState message={error} />;
 
   const history = scores.data ?? [];
@@ -52,6 +53,7 @@ export default function FlowDashboard({ config }: { config: FlowConfig }) {
       </p>
       {!latest ? (
         <Card title="No data yet">
+          <EmptyArt />
           <EmptyState message="No health scores found. Run the simulator to generate engineering events." />
         </Card>
       ) : (
@@ -64,8 +66,8 @@ export default function FlowDashboard({ config }: { config: FlowConfig }) {
                     ? latest.component_metrics[dim].toFixed(1)
                     : '—'}
                 </div>
-                <ScoreTrend
-                  scores={[...history]
+                <MiniSpark
+                  data={[...history]
                     .reverse()
                     .map((s) => s.component_metrics[dim])
                     .filter((v): v is number => typeof v === 'number')}
