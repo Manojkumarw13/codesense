@@ -363,10 +363,10 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Insight structure + lifecycle (Detected→Active→Reviewed→Resolved→Archived)
 - **DoD:** CodeSense auto-explains significant changes via deterministic rules.
 
-### Phase 17 — Frontend Foundation
-- [ ] React+TS app: routing, API client, shared UI
-- [ ] Layout: sidebar, header, team selector, time-range selector, main content, user menu
-- [ ] Navigation (Overview, Health, Delivery, Development, CI/CD, Reliability, Insights, Anomalies, Bottlenecks, Trends, Integrations, Simulator, AI Analysis, Settings)
+### Phase 17 — Frontend Foundation ✅
+- [x] React+TS app: routing, API client, shared UI
+- [x] Layout: sidebar, header, team selector, time-range selector, main content, user menu
+- [x] Navigation (Overview, Health, Delivery, Development, CI/CD, Reliability, Insights, Anomalies, Bottlenecks, Trends, Integrations, Simulator, AI Analysis, Settings)
 - **DoD:** Navigate all major sections.
 
 ### Phase 18 — Dashboards
