@@ -80,6 +80,28 @@ export interface MlModel {
   created_at?: string;
 }
 
+export interface ExplainResponse {
+  use_case: string;
+  explanation: string;
+  source: 'CLOUD_AI' | 'FALLBACK_RULES';
+  model?: string | null;
+  sanitized_context: Record<string, unknown>;
+}
+
+export interface AiStatus {
+  configured: boolean;
+  model?: string | null;
+  mode: 'cloud_ai' | 'fallback_rules';
+}
+
+export const USE_CASES = [
+  'score_explanation',
+  'anomaly_explanation',
+  'bottleneck_explanation',
+  'trend_summary',
+  'investigation_suggestions',
+] as const;
+
 export type TimeRange = '24h' | '7d' | '30d' | '90d';
 
 // The six health-score dimensions (PLAN §8).

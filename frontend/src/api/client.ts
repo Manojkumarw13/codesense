@@ -4,8 +4,10 @@
 // metric-definitions/values REST endpoint. Dashboards use the {items} list
 // APIs below. Do not re-add /metrics JSON calls without a backend endpoint.
 import type {
+  AiStatus,
   Anomaly,
   Bottleneck,
+  ExplainResponse,
   HealthResponse,
   HealthScore,
   Insight,
@@ -99,6 +101,9 @@ export const apiClient = {
   getBottleneck: (id: string) =>
     request<Bottleneck>(`/bottlenecks/${encodeURIComponent(id)}`),
 
+  explain: (useCase: string) =>
+    request<ExplainResponse>(`/ai/explain${qs({ use_case: useCase })}`, { method: 'POST' }),
+  getAiStatus: () => request<AiStatus>('/ai/status'),
   listMlModels: async () => {
     const payload = await request<MlModel[] | ListEnvelope<MlModel>>('/ml/models');
     return unwrap(payload);

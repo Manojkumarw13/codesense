@@ -376,11 +376,11 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Anomalies, Bottlenecks, Trends wired (filterable lists, evidence, SVG trends)
 - **DoD:** User can operate CodeSense end-to-end on simulator data.
 
-### Phase 19 — LLM Explainer (ONLY after deterministic analytics work)
-- [ ] Privacy gateway: strip names/emails/usernames/IDs, exclude raw payloads + individual metrics, validate payload (strictly enforced for both Cloud and Local LLMs)
-- [ ] Use cases in order: score explanation → anomaly explanation → bottleneck explanation → trend summary → investigation suggestions
-- [ ] Synchronous real-time generation (blocks request until LLM replies, no async background job queue needed for MVP)
-- [ ] OpenRouter-compatible model; graceful failure fallback to structured insights
+### Phase 19 — LLM Explainer ✅ (ONLY after deterministic analytics work)
+- [x] Privacy gateway: strip names/emails/usernames/IDs, exclude raw payloads + individual metrics, validate payload (strictly enforced for both Cloud and Local LLMs)
+- [x] Use cases in order: score explanation → anomaly explanation → bottleneck explanation → trend summary → investigation suggestions
+- [x] Synchronous real-time generation (blocks request until LLM replies, no async background job queue needed for MVP)
+- [x] OpenRouter-compatible model; graceful failure fallback to structured insights
 - **DoD:** AI explains team-level analytics **without receiving any developer identity**.
 
 ### Phase 20 — Privacy & Offline Mode

@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.app.api.endpoints import ai as ai_endpoint
 from backend.app.api.endpoints import anomalies, bottlenecks, events, health, insights, risk
 from backend.app.api.endpoints import health_score as health_score_endpoint
 from backend.app.api.endpoints import metrics as metrics_endpoint
@@ -59,6 +60,7 @@ app.include_router(bottlenecks.router, prefix=settings.API_V1_STR, tags=["bottle
 app.include_router(insights.router, prefix=settings.API_V1_STR, tags=["insights"])
 app.include_router(health_score_endpoint.router, prefix=settings.API_V1_STR, tags=["health-score"])
 app.include_router(ml_endpoint.router, prefix=settings.API_V1_STR, tags=["ml"])
+app.include_router(ai_endpoint.router, prefix=settings.API_V1_STR, tags=["ai"])
 
 @app.get("/")
 def read_root():
