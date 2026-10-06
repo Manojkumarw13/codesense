@@ -1,13 +1,15 @@
-import Card from '../components/ui/Card';
+import FlowDashboard from '../components/FlowDashboard';
 
 export default function Reliability() {
   return (
-    <div>
-      <h2>Reliability</h2>
-      <p className="muted">Change failure rate, MTTR, incidents — Phase 18.</p>
-      <Card title="Placeholder">
-        <p className="muted">Connects to GET /api/v1/metrics/*values.</p>
-      </Card>
-    </div>
+    <FlowDashboard
+      config={{
+        title: 'Reliability',
+        blurb: 'Change failure rate, incident frequency, MTTR.',
+        dimensions: ['operational_health', 'deployment_health'],
+        bottleneckCategories: ['INCIDENT', 'DEPLOYMENT'],
+        keywords: ['incident', 'mttr', 'reliab', 'failure', 'rollback'],
+      }}
+    />
   );
 }

@@ -1,13 +1,15 @@
-import Card from '../components/ui/Card';
+import FlowDashboard from '../components/FlowDashboard';
 
 export default function CICD() {
   return (
-    <div>
-      <h2>CI/CD</h2>
-      <p className="muted">Build success, pipeline duration, deployment health — Phase 18.</p>
-      <Card title="Placeholder">
-        <p className="muted">Connects to GET /api/v1/metrics/*values.</p>
-      </Card>
-    </div>
+    <FlowDashboard
+      config={{
+        title: 'CI/CD',
+        blurb: 'Build success, pipeline duration, deployment success and rollbacks.',
+        dimensions: ['cicd_reliability'],
+        bottleneckCategories: ['CI', 'DEPLOYMENT'],
+        keywords: ['ci', 'build', 'pipeline', 'deploy'],
+      }}
+    />
   );
 }

@@ -69,6 +69,29 @@ body {
 .state.error { color: #b42318; }
 .badge { padding: 4px 10px; border-radius: 999px; font-size: 12px; background: #eef2ff; }
 .badge-ok { background: #dcfce7; }
+.badge-bad, .badge-critical, .badge-high { background: #fee2e2; }
+.badge-medium { background: #fef3c7; }
+.badge-low { background: #e0e7ff; }
+
+.score-hero { font-size: 44px; font-weight: 800; line-height: 1; margin: 8px 0; }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 12px; }
+.table th, .table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.table th { color: var(--muted); font-weight: 600; }
+.filters { display: flex; gap: 12px; margin: 12px 0 16px; flex-wrap: wrap; }
+.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.list.cards { gap: 12px; }
+.chart { max-width: 100%; height: auto; }
+.trend-line { stroke: var(--accent); }
+.trend-dot { fill: var(--accent); }
+.dim-bars { display: flex; flex-direction: column; gap: 8px; }
+.dim-row { display: grid; grid-template-columns: 150px 1fr 48px; gap: 8px; align-items: center; font-size: 13px; }
+.dim-label { color: var(--muted); }
+.dim-track { background: #eef2f7; border-radius: 6px; height: 10px; overflow: hidden; }
+.dim-fill { background: var(--accent); height: 100%; border-radius: 6px; }
+.dim-value { text-align: right; font-variant-numeric: tabular-nums; }
+.evidence { margin-top: 8px; font-size: 13px; }
+.evidence summary { cursor: pointer; color: var(--accent); }
+.evidence pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow: auto; max-height: 280px; }
 
 @media (max-width: 860px) {
   .sidebar { display: none; }

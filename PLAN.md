@@ -369,10 +369,11 @@ Each phase lists **Tasks** (checkboxes) and a **Definition of Done (DoD)** — d
 - [x] Navigation (Overview, Health, Delivery, Development, CI/CD, Reliability, Insights, Anomalies, Bottlenecks, Trends, Integrations, Simulator, AI Analysis, Settings)
 - **DoD:** Navigate all major sections.
 
-### Phase 18 — Dashboards
-- [ ] Overview (score, change, dimension scores, delivery/devel/CI-CD/reliability summaries, active bottlenecks/anomalies, latest insights)
-- [ ] Health dashboard (score → components → trend → contributing metrics → evidence)
-- [ ] Delivery, Development, CI/CD, Reliability, Insights dashboards with drill-down
+### Phase 18 — Dashboards ✅
+- [x] Overview (score, change, dimension scores, delivery/devel/CI-CD/reliability summaries, active bottlenecks/anomalies, latest insights)
+- [x] Health dashboard (score → components → trend → contributing metrics → evidence)
+- [x] Delivery, Development, CI/CD, Reliability, Insights dashboards with drill-down
+- [x] Anomalies, Bottlenecks, Trends wired (filterable lists, evidence, SVG trends)
 - **DoD:** User can operate CodeSense end-to-end on simulator data.
 
 ### Phase 19 — LLM Explainer (ONLY after deterministic analytics work)

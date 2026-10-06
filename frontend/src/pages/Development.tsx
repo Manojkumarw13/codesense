@@ -1,13 +1,15 @@
-import Card from '../components/ui/Card';
+import FlowDashboard from '../components/FlowDashboard';
 
 export default function Development() {
   return (
-    <div>
-      <h2>Development Flow</h2>
-      <p className="muted">PR cycle time, review turnaround, backlog — Phase 18.</p>
-      <Card title="Placeholder">
-        <p className="muted">Connects to GET /api/v1/metrics/*values.</p>
-      </Card>
-    </div>
+    <FlowDashboard
+      config={{
+        title: 'Development Flow',
+        blurb: 'PR cycle time, review turnaround, review backlog, change size.',
+        dimensions: ['development_flow', 'review_flow'],
+        bottleneckCategories: ['REVIEW', 'WORKFLOW'],
+        keywords: ['review', 'pull', 'development', 'change'],
+      }}
+    />
   );
 }

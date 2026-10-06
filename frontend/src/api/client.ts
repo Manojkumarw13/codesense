@@ -1,12 +1,15 @@
 // Single API seam — frontend never touches DB, only this typed client.
+//
+// NOTE: backend GET /metrics is Prometheus text, NOT JSON — there is no
+// metric-definitions/values REST endpoint. Dashboards use the {items} list
+// APIs below. Do not re-add /metrics JSON calls without a backend endpoint.
 import type {
   Anomaly,
   Bottleneck,
   HealthResponse,
   HealthScore,
   Insight,
-  MetricDefinition,
-  MetricValue,
+  ListEnvelope,
   MlModel,
 } from '../types';
 
@@ -33,32 +36,74 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
-function qs(params: Record<string, string | undefined>): string {
+function qs(params: Record<string, string | number | undefined>): string {
   const q = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) if (v) q.set(k, v);
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== '') q.set(k, String(v));
+  }
   const s = q.toString();
   return s ? `?${s}` : '';
+}
+
+/** Unwrap {total, items} envelopes; pass arrays straight through. */
+export function unwrap<T>(payload: T[] | ListEnvelope<T>): T[] {
+  if (Array.isArray(payload)) return payload;
+  return payload.items ?? [];
+}
+
+export interface ListFilters {
+  team_id?: string;
+  severity?: string;
+  category?: string;
+  status?: string;
+  limit?: number;
 }
 
 export const apiClient = {
   baseUrl: BASE_URL,
   getHealth: () => request<HealthResponse>('/health'),
   getHealthDetailed: () => request<unknown>('/health/detailed'),
-  listEvents: (limit = 20) => request<unknown>(`/events${qs({ limit: String(limit) })}`),
-  getMetrics: () => request<MetricDefinition[] | { items: MetricDefinition[] }>('/metrics'),
-  getMetricValues: (metricId: string, filters: Record<string, string | undefined> = {}) =>
-    request<MetricValue[] | { items: MetricValue[] }>(
-      `/metrics/${encodeURIComponent(metricId)}/values${qs(filters)}`,
-    ),
-  getHealthScore: (filters: Record<string, string | undefined> = {}) =>
-    request<HealthScore[] | HealthScore>(`/health-score${qs(filters)}`),
-  getInsights: () => request<Insight[] | { items: Insight[] }>('/insights'),
-  getAnomalies: () => request<Anomaly[] | { items: Anomaly[] }>('/anomalies'),
-  getBottlenecks: () => request<Bottleneck[] | { items: Bottleneck[] }>('/bottlenecks'),
-  getRisk: (teamId: string) =>
-    request<unknown>(`/teams/${encodeURIComponent(teamId)}/risk`),
-  getMlModels: () => request<MlModel[] | { items: MlModel[] }>('/ml/models'),
+  listEvents: (limit = 20) =>
+    request<unknown>(`/events${qs({ limit })}`),
+
+  listHealthScores: async (filters: ListFilters = {}) => {
+    const payload = await request<HealthScore[] | ListEnvelope<HealthScore>>(
+      `/health-score${qs(filters as Record<string, string | number | undefined>)}`,
+    );
+    return unwrap(payload);
+  },
+  getHealthScore: (id: string) => request<HealthScore>(`/health-score/${encodeURIComponent(id)}`),
+
+  listInsights: async (filters: ListFilters = {}) => {
+    const payload = await request<Insight[] | ListEnvelope<Insight>>(
+      `/insights${qs(filters as Record<string, string | number | undefined>)}`,
+    );
+    return unwrap(payload);
+  },
+  getInsight: (id: string) => request<Insight>(`/insights/${encodeURIComponent(id)}`),
+
+  listAnomalies: async (filters: ListFilters = {}) => {
+    const payload = await request<Anomaly[] | ListEnvelope<Anomaly>>(
+      `/anomalies${qs(filters as Record<string, string | number | undefined>)}`,
+    );
+    return unwrap(payload);
+  },
+  getAnomaly: (id: string) => request<Anomaly>(`/anomalies/${encodeURIComponent(id)}`),
+
+  listBottlenecks: async (filters: ListFilters = {}) => {
+    const payload = await request<Bottleneck[] | ListEnvelope<Bottleneck>>(
+      `/bottlenecks${qs(filters as Record<string, string | number | undefined>)}`,
+    );
+    return unwrap(payload);
+  },
+  getBottleneck: (id: string) =>
+    request<Bottleneck>(`/bottlenecks/${encodeURIComponent(id)}`),
+
+  listMlModels: async () => {
+    const payload = await request<MlModel[] | ListEnvelope<MlModel>>('/ml/models');
+    return unwrap(payload);
+  },
   getMlFeatures: (teamId?: string) =>
     request<unknown>(`/ml/features${qs({ team_id: teamId })}`),
-  getMlPredictions: () => request<unknown>('/ml/predictions'),
+  getFusionStatus: () => request<unknown>('/ml/fusion/status'),
 };

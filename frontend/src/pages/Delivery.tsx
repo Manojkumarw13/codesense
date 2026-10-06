@@ -1,13 +1,15 @@
-import Card from '../components/ui/Card';
+import FlowDashboard from '../components/FlowDashboard';
 
 export default function Delivery() {
   return (
-    <div>
-      <h2>Delivery</h2>
-      <p className="muted">Deployment frequency, lead time, cycle time — Phase 18.</p>
-      <Card title="Placeholder">
-        <p className="muted">Connects to GET /api/v1/metrics/*values.</p>
-      </Card>
-    </div>
+    <FlowDashboard
+      config={{
+        title: 'Delivery',
+        blurb: 'Deployment frequency, lead time, cycle time, throughput, WIP.',
+        dimensions: ['delivery_flow'],
+        bottleneckCategories: ['WORKFLOW', 'DEPLOYMENT'],
+        keywords: ['deliver', 'deployment', 'lead time', 'cycle time', 'throughput', 'wip'],
+      }}
+    />
   );
 }
