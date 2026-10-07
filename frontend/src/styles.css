@@ -31,6 +31,20 @@ h2 {
   margin: 0 0 4px;
 }
 
+/* Section eyebrow — orientation cue above every page title. */
+.eyebrow {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+/* Inline links (Stripe link-on-light): indigo, underline on hover only. */
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
 /* Functional focus: every interactive element, instant orientation cue. */
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -80,7 +94,7 @@ h2 {
   border-radius: 8px;
   transition: background-color var(--fast) var(--ease-out), color var(--fast) var(--ease-out);
 }
-.nav-link:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+.nav-link:hover { background: rgba(255, 255, 255, 0.07); color: #fff; text-decoration: none; }
 .nav-link:active { transform: scale(0.98); }
 .nav-link.active { background: rgba(83, 58, 253, 0.28); color: #fff; font-weight: 600; }
 
