@@ -336,6 +336,12 @@ a:hover { text-decoration: underline; }
 @keyframes toastIn {
   from { opacity: 0; transform: translateY(8px); filter: blur(4px); }
 }
+/* Exit subtler than enter (Jakub): no blur, smaller travel. */
+.toast-exiting {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity var(--fast) var(--ease-out), transform var(--fast) var(--ease-out);
+}
 .toast-title { font-weight: 650; }
 .toast-detail { color: #94a3b8; margin-top: 2px; }
 .toast-ok { border-left: 3px solid #22c55e; }
