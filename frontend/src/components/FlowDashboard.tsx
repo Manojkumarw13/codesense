@@ -47,7 +47,7 @@ export default function FlowDashboard({ config }: { config: FlowConfig }) {
 
   return (
     <div>
-      <h2>{config.title}</h2>
+      <h1>{config.title}</h1>
       <p className="muted">
         Team <strong>{teamId}</strong> · Range <strong>{timeRange}</strong> · {config.blurb}
       </p>

@@ -39,7 +39,7 @@ export default function Simulator() {
 
   return (
     <div>
-      <h2>Simulator</h2>
+      <h1>Simulator</h1>
       <p className="muted">The external data source — live status and controls.</p>
       {status.loading ? (
         <Loading />

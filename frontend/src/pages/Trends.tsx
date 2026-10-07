@@ -23,7 +23,7 @@ export default function Trends() {
 
   return (
     <div>
-      <h2>Trends</h2>
+      <h1>Trends</h1>
       <p className="muted">
         Team <strong>{teamId}</strong> · Range <strong>{timeRange}</strong> · Historical
         baselines and score trajectory

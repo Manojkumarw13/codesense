@@ -27,7 +27,7 @@ export default function Anomalies() {
 
   return (
     <div>
-      <h2>Anomalies</h2>
+      <h1>Anomalies</h1>
       <p className="muted">
         Team <strong>{teamId}</strong> · Rules + Stats + ML fused detections
       </p>

@@ -16,7 +16,7 @@ export default function Settings() {
   const { teamId, timeRange } = useApp();
   return (
     <div>
-      <h2>Settings</h2>
+      <h1>Settings</h1>
       <p className="muted">Workspace context and score configuration (read-only for now).</p>
       <Card title="Workspace">
         <p>

@@ -35,7 +35,7 @@ export default function Insights() {
 
   return (
     <div>
-      <h2>Insights</h2>
+      <h1>Insights</h1>
       <p className="muted">
         Team <strong>{teamId}</strong> · Detected → Active → Reviewed → Resolved → Archived
       </p>

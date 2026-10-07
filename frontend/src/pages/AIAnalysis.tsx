@@ -49,7 +49,7 @@ export default function AIAnalysis() {
 
   return (
     <div>
-      <h2>AI Analysis</h2>
+      <h1>AI Analysis</h1>
       <p className="muted">
         Team <strong>{teamId}</strong> · Optional LLM explainer behind the privacy gateway.{' '}
         No developer identity is ever sent or displayed.

@@ -12,7 +12,7 @@ const ROADMAP = [
 export default function Integrations() {
   return (
     <div>
-      <h2>Integrations</h2>
+      <h1>Integrations</h1>
       <p className="muted">Real providers land in Phase 21 — simulator data flows today.</p>
       <Card title="Provider roadmap">
         <EmptyArt />

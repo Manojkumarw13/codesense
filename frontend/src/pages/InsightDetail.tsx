@@ -21,7 +21,7 @@ export default function InsightDetail() {
       <p className="muted">
         <Link to="/insights">← All insights</Link>
       </p>
-      <h2>{item.title}</h2>
+      <h1>{item.title}</h1>
       <p className="muted">
         {item.severity && <Badge tone={item.severity.toLowerCase()}>{item.severity}</Badge>}{' '}
         {item.category && <Badge tone="info">{item.category}</Badge>}{' '}

@@ -23,13 +23,29 @@ body {
   letter-spacing: -0.01em;
 }
 
-h2 {
+h1 {
   font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.4;
   margin: 0 0 4px;
 }
+
+/* Skip link: hidden until keyboard focus lands on it. */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  z-index: 100;
+  background: var(--ink);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  transition: top var(--fast) var(--ease-out);
+}
+.skip-link:focus-visible { top: 12px; }
 
 /* Section eyebrow — orientation cue above every page title. */
 .eyebrow {

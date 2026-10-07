@@ -35,7 +35,7 @@ export default function Bottlenecks() {
 
   return (
     <div>
-      <h2>Bottlenecks</h2>
+      <h1>Bottlenecks</h1>
       <p className="muted">
         Team <strong>{teamId}</strong> · Review / CI / Deployment / Workflow / Incident
       </p>

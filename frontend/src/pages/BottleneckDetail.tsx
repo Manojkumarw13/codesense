@@ -21,7 +21,7 @@ export default function BottleneckDetail() {
       <p className="muted">
         <Link to="/bottlenecks">← All bottlenecks</Link>
       </p>
-      <h2>{item.title}</h2>
+      <h1>{item.title}</h1>
       <p className="muted">
         <Badge tone={item.severity.toLowerCase()}>{item.severity}</Badge>{' '}
         <Badge tone="info">{item.category}</Badge>{' '}

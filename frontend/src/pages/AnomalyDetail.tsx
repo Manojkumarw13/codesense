@@ -21,9 +21,9 @@ export default function AnomalyDetail() {
       <p className="muted">
         <Link to="/anomalies">← All anomalies</Link>
       </p>
-      <h2>
+      <h1>
         Anomaly <Badge tone={item.severity.toLowerCase()}>{item.severity}</Badge>
-      </h2>
+      </h1>
       <p className="muted">Detected {new Date(item.detected_at).toLocaleString()}</p>
       <Card title="Observed vs baseline">
         <div className="table-wrap">

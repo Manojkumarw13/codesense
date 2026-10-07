@@ -43,7 +43,7 @@ export function ScoreArea({ data, height = 220 }: { data: TrendPoint[]; height?:
   const anim = useAnim();
   if (data.length === 0) return <p className="muted">No score history yet.</p>;
   return (
-    <div className="rechart" style={{ width: '100%', height }}>
+    <div className="rechart" role="img" aria-label="Health score trajectory chart" style={{ width: '100%', height }}>
       <ResponsiveContainer>
         <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
           <defs>
@@ -68,7 +68,7 @@ export function MiniSpark({ data, height = 64 }: { data: number[]; height?: numb
   if (data.length === 0) return null;
   const points = data.map((score, i) => ({ i, score }));
   return (
-    <div className="rechart" style={{ width: '100%', height }}>
+    <div className="rechart" role="img" aria-label="Score sparkline" style={{ width: '100%', height }}>
       <ResponsiveContainer>
         <AreaChart data={points} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
           <Area type="monotone" dataKey="score" stroke={ACCENT} strokeWidth={2} fill={ACCENT} fillOpacity={0.12} dot={false} isAnimationActive={anim.isAnimationActive} animationDuration={300} />
@@ -90,7 +90,7 @@ export function DimensionBarsChart({ dims }: { dims: Record<string, number> }) {
     fill: DIM_COLORS[i % DIM_COLORS.length],
   }));
   return (
-    <div className="rechart" style={{ width: '100%', height: 24 + entries.length * 34 }}>
+    <div className="rechart" role="img" aria-label="Dimension scores bar chart" style={{ width: '100%', height: 24 + entries.length * 34 }}>
       <ResponsiveContainer>
         <BarChart data={data} layout="vertical" margin={{ top: 0, right: 12, bottom: 0, left: 8 }}>
           <CartesianGrid stroke={GRID} strokeDasharray="3 3" horizontal={false} />
@@ -117,7 +117,7 @@ export function MultiTrend({ data, series }: { data: MultiPoint[]; series: strin
   const anim = useAnim();
   if (data.length === 0) return <p className="muted">No trend data yet.</p>;
   return (
-    <div className="rechart" style={{ width: '100%', height: 300 }}>
+    <div className="rechart" role="img" aria-label="Dimension trends multi-line chart" style={{ width: '100%', height: 300 }}>
       <ResponsiveContainer>
         <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
           <CartesianGrid stroke={GRID} strokeDasharray="3 3" vertical={false} />

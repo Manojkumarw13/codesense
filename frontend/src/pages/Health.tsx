@@ -24,7 +24,7 @@ export default function Health() {
 
   return (
     <div>
-      <h2>Engineering Health</h2>
+      <h1>Engineering Health</h1>
       <p className="muted">
         Team <strong>{teamId}</strong> · Range <strong>{timeRange}</strong> · Score →
         Dimension → Metric → Evidence

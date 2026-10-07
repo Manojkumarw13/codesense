@@ -36,7 +36,7 @@ export default function Overview() {
 
   return (
     <div>
-      <h2>Overview</h2>
+      <h1>Overview</h1>
       <p className="muted">
         Team <strong>{teamId}</strong> · Range <strong>{timeRange}</strong>
       </p>
