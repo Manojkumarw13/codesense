@@ -16,12 +16,12 @@ import {
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { dimensionLabel } from '../../types';
 
-const ACCENT = '#2563eb';
-const GRID = '#e6e8ee';
-const TICK = '#64748b';
+const ACCENT = '#533afd';
+const GRID = '#e3e8ee';
+const TICK = '#64748d';
 
 const TOOLTIP_STYLE = {
-  backgroundColor: '#0f172a',
+  backgroundColor: '#0d253d',
   border: 'none',
   borderRadius: 8,
   color: '#e2e8f0',
@@ -78,7 +78,7 @@ export function MiniSpark({ data, height = 64 }: { data: number[]; height?: numb
   );
 }
 
-const DIM_COLORS = ['#2563eb', '#0ea5e9', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981'];
+const DIM_COLORS = ['#533afd', '#665efd', '#0ea5e9', '#ea2261', '#f59e0b', '#10b981'];
 
 export function DimensionBarsChart({ dims }: { dims: Record<string, number> }) {
   const anim = useAnim();

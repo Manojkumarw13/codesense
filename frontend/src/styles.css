@@ -18,7 +18,7 @@ body {
 }
 
 /* Tabular numerals wherever numbers compare (Stripe body-tabular). */
-.tnum, .score-hero, .table th, .table td, .dim-value, .rechart {
+.tnum, .score-hero, .table th, .table td, .rechart {
   font-feature-settings: "tnum";
   letter-spacing: -0.01em;
 }
@@ -82,7 +82,7 @@ h2 {
 }
 .nav-link:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
 .nav-link:active { transform: scale(0.98); }
-.nav-link.active { background: rgba(59, 130, 246, 0.22); color: #fff; font-weight: 600; }
+.nav-link.active { background: rgba(83, 58, 253, 0.28); color: #fff; font-weight: 600; }
 
 .main-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
@@ -110,15 +110,17 @@ h2 {
 }
 .selector select {
   padding: 7px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
+  min-height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-input);
   background: var(--panel);
   color: var(--ink);
   font-size: 13px;
   font-weight: 550;
   transition: border-color var(--fast) var(--ease-out), box-shadow var(--fast) var(--ease-out);
 }
-.selector select:hover { border-color: #c9d2e0; }
+.selector select:hover { border-color: var(--accent-soft); }
+.selector select:focus-visible { border-color: var(--accent); }
 
 .user-menu { display: flex; align-items: center; gap: 9px; }
 .avatar {
@@ -152,22 +154,17 @@ h2 {
   margin: 16px 0;
 }
 
-/* Layered shadow depth (Jakub §3), hover darkens — transform untouched. */
+/* Hairline edge + Level-1 lift (Stripe card-feature-light). */
 .card {
   background: var(--panel);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
   padding: 18px;
-  box-shadow:
-    0px 0px 0px 1px rgba(15, 23, 42, 0.05),
-    0px 1px 2px -1px rgba(15, 23, 42, 0.07),
-    0px 2px 6px 0px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--shadow-1);
   transition: box-shadow var(--fast) var(--ease-out);
 }
 .card:hover {
-  box-shadow:
-    0px 0px 0px 1px rgba(15, 23, 42, 0.07),
-    0px 1px 2px -1px rgba(15, 23, 42, 0.08),
-    0px 4px 12px 0px rgba(15, 23, 42, 0.07);
+  box-shadow: var(--shadow-2);
 }
 .card-title { margin: 0 0 10px; font-size: 13.5px; font-weight: 650; }
 .card p { margin: 8px 0; }
@@ -182,17 +179,18 @@ h2 {
   font-variant-numeric: tabular-nums;
 }
 
-/* --- Badges: tinted severity scale, readable contrast --- */
+/* --- Badges: soft-pill tags (Stripe pill-tag-soft), severity tints --- */
 .badge {
   display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
+  padding: 4px 8px;
+  border-radius: var(--radius-pill);
   font-size: 11.5px;
   font-weight: 650;
   letter-spacing: 0.02em;
-  background: var(--info-bg);
-  color: var(--info-ink);
+  background: var(--accent-tint);
+  color: var(--accent-ink);
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .badge-ok { background: var(--ok-bg); color: var(--ok-ink); }
 .badge-bad, .badge-critical, .badge-high { background: var(--bad-bg); color: var(--bad-ink); }
@@ -202,19 +200,27 @@ h2 {
 /* --- Buttons: press-scale tactile feedback (Emil tip #1) --- */
 .btn {
   appearance: none;
-  padding: 8px 18px;
-  border-radius: 8px;
+  padding: 8px 16px;
+  min-height: 40px;
+  border-radius: var(--radius-pill);
   border: 1px solid transparent;
   background: var(--accent);
   color: #fff;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: background-color var(--fast) var(--ease-out), transform 120ms var(--ease-out);
 }
-.btn:hover { background: var(--accent-ink); }
-.btn:active { transform: scale(0.97); }
+.btn:hover { background: var(--accent-deep); }
+.btn:active { background: var(--accent-press); transform: scale(0.97); }
 .btn:disabled { opacity: 0.65; cursor: wait; }
+.btn-secondary {
+  background: var(--panel);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.btn-secondary:hover { background: var(--accent-tint); }
+.btn-sm { padding: 6px 14px; min-height: 36px; font-size: 13px; }
 
 /* Rare blocking request only: determinate-feeling progress indicator. */
 .spinner {
@@ -254,23 +260,6 @@ h2 {
 .list.cards > li > .card { margin: 0; }
 .state { padding: 26px 12px; color: var(--muted); text-align: center; font-size: 13.5px; }
 .state.error { color: var(--bad-ink); }
-
-/* --- Charts (static data ink, tabular numerals) --- */
-.chart { max-width: 100%; height: auto; display: block; }
-.trend-line { stroke: var(--accent); }
-.trend-dot { fill: var(--accent); }
-.dim-bars { display: flex; flex-direction: column; gap: 9px; margin-top: 6px; }
-.dim-row {
-  display: grid;
-  grid-template-columns: 148px 1fr 46px;
-  gap: 10px;
-  align-items: center;
-  font-size: 13px;
-}
-.dim-label { color: var(--muted); font-weight: 500; }
-.dim-track { background: #edf0f5; border-radius: 6px; height: 8px; overflow: hidden; }
-.dim-fill { background: var(--accent); height: 100%; border-radius: 6px; }
-.dim-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 
 /* --- Evidence disclosure: instant toggle, code-block body --- */
 .evidence { margin-top: 10px; font-size: 13px; }
