@@ -57,6 +57,7 @@ export default function Health() {
             <ScoreArea
               data={chrono.map((s) => ({ label: labelOf(s.period_end), score: s.score }))}
             />
+            <div className="table-wrap">
             <table className="table">
               <thead>
                 <tr>
@@ -77,6 +78,7 @@ export default function Health() {
                 ))}
               </tbody>
             </table>
+            </div>
           </Card>
         </>
       )}

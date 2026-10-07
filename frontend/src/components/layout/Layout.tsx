@@ -21,6 +21,9 @@ export default function Layout() {
   return (
     <div className="shell">
       <Sidebar open={open} onClose={() => setOpen(false)} />
+      {open && (
+        <button className="scrim open" aria-label="Close navigation" onClick={() => setOpen(false)} />
+      )}
       <div className="main-col">
         <Header onMenu={() => setOpen((v) => !v)} />
         <main className="content">

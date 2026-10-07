@@ -48,7 +48,8 @@ export default function Anomalies() {
           <EmptyState message="No anomalies detected. Bottleneck simulator scenarios produce detections." />
         </Card>
       ) : (
-        <table className="table">
+        <div className="table-wrap">
+            <table className="table">
           <thead>
             <tr>
               <th>Detected</th>
@@ -74,6 +75,7 @@ export default function Anomalies() {
             ))}
           </tbody>
         </table>
+            </div>
       )}
     </div>
   );

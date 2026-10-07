@@ -360,8 +360,30 @@ a:hover { text-decoration: underline; }
 .delta-up { color: var(--ok-ink); }
 .delta-down { color: var(--bad-ink); }
 
-/* --- Mobile drawer: single transform slide from the edge --- */
-@media (max-width: 860px) {
+/* Tables scroll in place on narrow screens — layout never breaks. */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-wrap > .table { margin-top: 0; min-width: 560px; }
+
+/* --- Tablet tier: comfortable density between desktop and phone --- */
+@media (max-width: 1024px) {
+  .content { padding: 20px 20px 40px; }
+  .grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}
+
+/* --- Drawer scrim: tap-outside-to-close target --- */
+.scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  background: rgba(13, 37, 61, 0.4);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* --- Phone tier: single-panel simplification, 44px targets --- */
+@media (max-width: 768px) {
   .sidebar {
     display: block;
     position: fixed;
@@ -375,9 +397,14 @@ a:hover { text-decoration: underline; }
     transform: translateX(0);
     box-shadow: 12px 0 40px rgba(15, 23, 42, 0.25);
   }
-  .menu-btn { display: inline-block; }
+  .scrim.open { display: block; }
+  .menu-btn { display: inline-block; min-height: 44px; min-width: 44px; }
   .content { padding: 18px 16px 40px; }
   .header { padding: 10px 14px; }
+  .nav-link { padding: 12px; }
+  .btn { min-height: 44px; }
+  .selector select { min-height: 44px; }
+  .filters { flex-direction: column; align-items: stretch; }
 }
 
 /* Accessibility is not optional: kill motion, keep final states. */

@@ -26,7 +26,8 @@ export default function Settings() {
       </Card>
       <Card title="Health-score weights">
         <EmptyArt />
-        <table className="table">
+        <div className="table-wrap">
+            <table className="table">
           <thead>
             <tr>
               <th>Dimension</th>
@@ -42,6 +43,7 @@ export default function Settings() {
             ))}
           </tbody>
         </table>
+            </div>
       </Card>
     </div>
   );

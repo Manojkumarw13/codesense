@@ -26,7 +26,8 @@ export default function AnomalyDetail() {
       </h2>
       <p className="muted">Detected {new Date(item.detected_at).toLocaleString()}</p>
       <Card title="Observed vs baseline">
-        <table className="table">
+        <div className="table-wrap">
+            <table className="table">
           <tbody>
             <tr>
               <td>Observed</td>
@@ -46,6 +47,7 @@ export default function AnomalyDetail() {
             </tr>
           </tbody>
         </table>
+            </div>
       </Card>
       <Card title="Evidence">
         <Evidence data={item.evidence} />
