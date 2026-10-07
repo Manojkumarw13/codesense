@@ -45,6 +45,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Worktrees (isolated implementation workspaces)
+.worktrees/
+
 # IDEs
 .idea/
 .vscode/
