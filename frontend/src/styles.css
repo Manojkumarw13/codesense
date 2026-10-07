@@ -1,48 +1,33 @@
-/* CodeSense design system — Emil (restraint) primary, Jakub (polish) secondary.
+@import './styles/tokens.css';
+
+/* CodeSense design system — Stripe tokens + Emil restraint + Jakub polish.
    Motion rule: micro-feedback only (hover/press/focus). Route changes, data
    grids, charts and disclosures are instant — frequency gate, no decoration. */
-
-:root {
-  --bg: #f6f7f9;
-  --panel: #ffffff;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --faint: #94a3b8;
-  --line: #e6e8ee;
-  --accent: #2563eb;
-  --accent-ink: #1d4ed8;
-  --accent-tint: #e8effd;
-  --sidebar: #0f172a;
-  --sidebar-ink: #cbd5e1;
-  --ok-bg: #e5f6ea;
-  --ok-ink: #14702c;
-  --warn-bg: #fdf3d7;
-  --warn-ink: #8a5a00;
-  --bad-bg: #fdecec;
-  --bad-ink: #b42318;
-  --info-bg: #e8effd;
-  --info-ink: #1d4fd7;
-  --radius: 10px;
-  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
-  --fast: 150ms;
-}
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-feature-settings: "ss01";
   background: var(--bg);
   color: var(--ink);
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 15px;
+  line-height: 1.4;
   -webkit-font-smoothing: antialiased;
 }
 
-h2 {
-  font-size: 21px;
-  font-weight: 700;
+/* Tabular numerals wherever numbers compare (Stripe body-tabular). */
+.tnum, .score-hero, .table th, .table td, .dim-value, .rechart {
+  font-feature-settings: "tnum";
   letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
   margin: 0 0 4px;
 }
 
