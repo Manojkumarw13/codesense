@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useApp } from '../context/AppContext';
 import { useApi } from '../hooks/useApi';
@@ -75,6 +76,7 @@ export default function Bottlenecks() {
                   <span>{new Date(b.detected_at).toLocaleString()}</span>
                 </p>
                 <Evidence data={b.evidence} />
+                <Link to={`/bottlenecks/${b.id}`}>Open detail →</Link>
               </Card>
             </li>
           ))}

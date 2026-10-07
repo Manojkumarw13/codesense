@@ -112,3 +112,37 @@ export const apiClient = {
     request<unknown>(`/ml/features${qs({ team_id: teamId })}`),
   getFusionStatus: () => request<unknown>('/ml/fusion/status'),
 };
+
+const SIM_BASE =
+  (import.meta.env.VITE_SIMULATOR_URL as string | undefined) ?? 'http://localhost:8001';
+
+async function simRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${SIM_BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...init,
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, `${init?.method ?? 'GET'} ${path} failed: ${res.status}`);
+  }
+  return (await res.json()) as T;
+}
+
+export interface SimulatorStatus {
+  is_running: boolean;
+  is_paused: boolean;
+  current_scenario: string;
+  simulated_time: string;
+  active_entities: Record<string, number>;
+}
+
+export const simulatorClient = {
+  baseUrl: SIM_BASE,
+  getStatus: () => simRequest<SimulatorStatus>('/simulator/status'),
+  start: () => simRequest<{ message: string }>('/simulator/start', { method: 'POST' }),
+  stop: () => simRequest<{ message: string }>('/simulator/stop', { method: 'POST' }),
+  setScenario: (scenario: string) =>
+    simRequest<{ message: string }>('/simulator/scenario', {
+      method: 'POST',
+      body: JSON.stringify({ scenario }),
+    }),
+};

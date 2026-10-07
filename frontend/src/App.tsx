@@ -13,8 +13,11 @@ const Development = lazy(() => import('./pages/Development'));
 const CICD = lazy(() => import('./pages/CICD'));
 const Reliability = lazy(() => import('./pages/Reliability'));
 const Insights = lazy(() => import('./pages/Insights'));
+const InsightDetail = lazy(() => import('./pages/InsightDetail'));
 const Anomalies = lazy(() => import('./pages/Anomalies'));
+const AnomalyDetail = lazy(() => import('./pages/AnomalyDetail'));
 const Bottlenecks = lazy(() => import('./pages/Bottlenecks'));
+const BottleneckDetail = lazy(() => import('./pages/BottleneckDetail'));
 const Trends = lazy(() => import('./pages/Trends'));
 const Integrations = lazy(() => import('./pages/Integrations'));
 const Simulator = lazy(() => import('./pages/Simulator'));
@@ -36,8 +39,11 @@ export default function App() {
               <Route path="cicd" element={<CICD />} />
               <Route path="reliability" element={<Reliability />} />
               <Route path="insights" element={<Insights />} />
+              <Route path="insights/:id" element={<InsightDetail />} />
               <Route path="anomalies" element={<Anomalies />} />
+              <Route path="anomalies/:id" element={<AnomalyDetail />} />
               <Route path="bottlenecks" element={<Bottlenecks />} />
+              <Route path="bottlenecks/:id" element={<BottleneckDetail />} />
               <Route path="trends" element={<Trends />} />
               <Route path="integrations" element={<Integrations />} />
               <Route path="simulator" element={<Simulator />} />

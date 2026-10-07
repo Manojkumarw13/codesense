@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useApp } from '../context/AppContext';
 import { useApi } from '../hooks/useApi';
@@ -68,7 +69,7 @@ export default function Anomalies() {
                 <td>{a.change_percent != null ? `${a.change_percent.toFixed(1)}%` : '—'}</td>
                 <td><Badge tone={a.severity.toLowerCase()}>{a.severity}</Badge></td>
                 <td>{a.confidence != null ? a.confidence.toFixed(2) : '—'}</td>
-                <td><Evidence data={a.evidence} /></td>
+                <td><Evidence data={a.evidence} /><br /><Link to={`/anomalies/${a.id}`}>Open →</Link></td>
               </tr>
             ))}
           </tbody>

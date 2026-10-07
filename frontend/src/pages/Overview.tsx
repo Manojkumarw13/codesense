@@ -50,6 +50,9 @@ export default function Overview() {
           <div className="grid">
             <Card title="Engineering Health Score">
               <div className="score-hero">{latest.score.toFixed(1)}</div>
+              <p className="muted">
+                Period ending {shortDate(latest.period_end)} · {history.length} scored periods
+              </p>
               {latest.score_change != null && (
                 <p>
                   <Badge tone={latest.score_change >= 0 ? 'ok' : 'bad'}>

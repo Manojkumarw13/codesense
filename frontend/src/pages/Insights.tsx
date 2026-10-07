@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useApp } from '../context/AppContext';
 import { useApi } from '../hooks/useApi';
@@ -77,6 +78,7 @@ export default function Insights() {
                   <span>{new Date(i.created_at).toLocaleString()}</span>
                 </p>
                 <Evidence data={{ evidence: i.evidence, source_metrics: i.source_metrics }} />
+                <Link to={`/insights/${i.id}`}>Open detail →</Link>
               </Card>
             </li>
           ))}
