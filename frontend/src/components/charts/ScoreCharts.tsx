@@ -54,7 +54,7 @@ export function ScoreArea({ data, height = 220 }: { data: TrendPoint[]; height?:
           </defs>
           <CartesianGrid stroke={GRID} strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="label" tick={{ fill: TICK, fontSize: 11 }} tickLine={false} axisLine={{ stroke: GRID }} minTickGap={28} />
-          <YAxis domain={[0, 100]} tick={{ fill: TICK, fontSize: 11 }} tickLine={false} axisLine={false} width={36} />
+          <YAxis domain={[0, 100]} tick={{ fill: TICK, fontSize: 11 }} tickLine={false} axisLine={false} width={44} />
           <Tooltip contentStyle={TOOLTIP_STYLE} />
           <Area type="monotone" dataKey="score" name="Score" stroke={ACCENT} strokeWidth={2.5} fill="url(#scoreFill)" dot={false} activeDot={{ r: 4 }} {...anim} />
         </AreaChart>
@@ -122,7 +122,7 @@ export function MultiTrend({ data, series }: { data: MultiPoint[]; series: strin
         <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
           <CartesianGrid stroke={GRID} strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="label" tick={{ fill: TICK, fontSize: 11 }} tickLine={false} axisLine={{ stroke: GRID }} minTickGap={32} />
-          <YAxis domain={[0, 100]} tick={{ fill: TICK, fontSize: 11 }} tickLine={false} axisLine={false} width={36} />
+          <YAxis domain={[0, 100]} tick={{ fill: TICK, fontSize: 11 }} tickLine={false} axisLine={false} width={44} />
           <Tooltip contentStyle={TOOLTIP_STYLE} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           {series.map((s, i) => (
