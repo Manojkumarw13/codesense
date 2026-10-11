@@ -8,10 +8,23 @@ export default function PublicLayout() {
           CodeSense
         </Link>
         <nav aria-label="Public">
+          <Link to="/product">Product</Link>
+          {' · '}
+          <Link to="/docs">Docs</Link>
+          {' · '}
           <Link to="/app">Open app</Link>
         </nav>
       </header>
       <Outlet />
+      <footer className="public-footer">
+        <p>
+          CodeSense — team-level engineering health. <Link to="/product">Product</Link>
+          {' · '}
+          <Link to="/docs">Docs</Link>
+          {' · '}
+          <Link to="/app">Open dashboard</Link>
+        </p>
+      </footer>
     </div>
   );
 }

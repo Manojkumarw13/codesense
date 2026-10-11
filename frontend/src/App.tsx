@@ -1,6 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import PublicLayout from './components/layout/PublicLayout';
+import DocsEntry from './pages/DocsEntry';
+import Landing from './pages/Landing';
+import Product from './pages/Product';
 
 function stub(text: string) {
   return function Stub() {
@@ -9,9 +12,6 @@ function stub(text: string) {
 }
 
 // Placeholder pages — later tasks replace each with a real page module.
-const Landing = stub('Landing');
-const Product = stub('Product');
-const DocsEntry = stub('DocsEntry');
 const Overview = stub('Overview');
 const Health = stub('Health');
 const Delivery = stub('Delivery');
