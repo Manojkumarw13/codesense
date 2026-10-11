@@ -17,19 +17,11 @@ import Anomalies from './pages/Anomalies';
 import AnomalyDetail from './pages/AnomalyDetail';
 import Bottlenecks from './pages/Bottlenecks';
 import BottleneckDetail from './pages/BottleneckDetail';
-
-function stub(text: string) {
-  return function Stub() {
-    return <main>{text}</main>;
-  };
-}
-
-// Placeholder pages — later tasks replace each with a real page module.
-const Integrations = stub('Integrations');
-const Simulator = stub('Simulator');
-const AIAnalysis = stub('AIAnalysis');
-const Settings = stub('Settings');
-const NotFound = stub('NotFound');
+import Simulator from './pages/Simulator';
+import AIAnalysis from './pages/AIAnalysis';
+import Integrations from './pages/Integrations';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
