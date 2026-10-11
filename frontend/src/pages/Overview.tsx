@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { apiClient } from '../api/client';
 import { useApp } from '../context/AppContext';
@@ -58,13 +59,13 @@ export default function Overview() {
         <h2 id="overview-signals">Signals</h2>
         <ul className="signal-counts">
           <li>
-            <a href="/app/insights">{(insights.data ?? []).length} insights</a>
+            <Link to="/app/insights">{(insights.data ?? []).length} insights</Link>
           </li>
           <li>
-            <a href="/app/anomalies">{(anomalies.data ?? []).length} anomalies</a>
+            <Link to="/app/anomalies">{(anomalies.data ?? []).length} anomalies</Link>
           </li>
           <li>
-            <a href="/app/bottlenecks">{(bottlenecks.data ?? []).length} bottlenecks</a>
+            <Link to="/app/bottlenecks">{(bottlenecks.data ?? []).length} bottlenecks</Link>
           </li>
         </ul>
       </section>

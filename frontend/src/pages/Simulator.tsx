@@ -9,9 +9,13 @@ import Select from '../components/ui/Select';
 import Toast from '../components/ui/Toast';
 
 const SCENARIOS = [
-  { value: 'baseline', label: 'Baseline' },
-  { value: 'high-load', label: 'High load' },
-  { value: 'incident', label: 'Incident storm' },
+  { value: 'NORMAL', label: 'Normal' },
+  { value: 'HIGH_LOAD', label: 'High load' },
+  { value: 'REVIEW_BOTTLENECK', label: 'Review bottleneck' },
+  { value: 'CI_BOTTLENECK', label: 'CI bottleneck' },
+  { value: 'DEPLOYMENT_FAILURE', label: 'Deployment failure' },
+  { value: 'INCIDENT_SPIKE', label: 'Incident spike' },
+  { value: 'RECOVERY', label: 'Recovery' },
 ];
 
 function formatStatus(status: Record<string, unknown>): Array<[string, string]> {

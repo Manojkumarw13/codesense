@@ -29,7 +29,7 @@ const FALLBACK_EXPLANATION =
 
 /** AIAnalysis: status-gated fallback notice + on-demand explain with 422 fallback. */
 export default function AIAnalysis() {
-  const [attempt, setAttempt] = useState(0);
+  const [attempt] = useState(0);
   const aiStatus = useApi(() => apiClient.getAiStatus(), [attempt]);
   const [topic, setTopic] = useState('');
   const [explaining, setExplaining] = useState(false);
@@ -123,10 +123,7 @@ export default function AIAnalysis() {
         {explainError && (
           <ErrorState
             message={explainError}
-            onRetry={() => {
-              setAttempt((n) => n + 1);
-              setExplainError(null);
-            }}
+            onRetry={() => void handleExplain()}
           />
         )}
         {fallback && (

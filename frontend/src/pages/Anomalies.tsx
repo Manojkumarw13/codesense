@@ -38,6 +38,20 @@ export default function Anomalies() {
   }
 
   // Client-side guard in case the backend ignores the severity param.
+  const categories = Array.from(
+    new Set(
+      all.map((item) =>
+        String(
+          (item as unknown as Record<string, unknown>).category ??
+            (item as unknown as Record<string, unknown>).anomaly_type ??
+            '',
+        ),
+      ),
+    ),
+  )
+    .filter(Boolean)
+    .sort();
+
   const items = all.filter(
     (item) =>
       (severity === 'ALL' || item.severity === severity) &&
@@ -57,6 +71,7 @@ export default function Anomalies() {
         onSeverityChange={setSeverity}
         category={category}
         onCategoryChange={setCategory}
+        categories={categories}
       />
       <Card title="Anomalies">
         <SignalList
