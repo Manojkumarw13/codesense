@@ -11,6 +11,12 @@ import Delivery from './pages/Delivery';
 import Development from './pages/Development';
 import CICD from './pages/CICD';
 import Reliability from './pages/Reliability';
+import Insights from './pages/Insights';
+import InsightDetail from './pages/InsightDetail';
+import Anomalies from './pages/Anomalies';
+import AnomalyDetail from './pages/AnomalyDetail';
+import Bottlenecks from './pages/Bottlenecks';
+import BottleneckDetail from './pages/BottleneckDetail';
 
 function stub(text: string) {
   return function Stub() {
@@ -19,12 +25,6 @@ function stub(text: string) {
 }
 
 // Placeholder pages — later tasks replace each with a real page module.
-const Insights = stub('Insights');
-const InsightDetail = stub('InsightDetail');
-const Anomalies = stub('Anomalies');
-const AnomalyDetail = stub('AnomalyDetail');
-const Bottlenecks = stub('Bottlenecks');
-const BottleneckDetail = stub('BottleneckDetail');
 const Integrations = stub('Integrations');
 const Simulator = stub('Simulator');
 const AIAnalysis = stub('AIAnalysis');
