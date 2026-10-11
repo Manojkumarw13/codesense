@@ -130,6 +130,21 @@ services:
     networks:
       - home-server-backend
 
+  # ─── Dashboard (frontend) ────────────────────────────────────────
+  dashboard:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: codesense-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - home-server-backend
+
 volumes:
   redis_data:
   prometheus_data:
