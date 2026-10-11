@@ -7,6 +7,10 @@ import Product from './pages/Product';
 import Overview from './pages/Overview';
 import Health from './pages/Health';
 import Trends from './pages/Trends';
+import Delivery from './pages/Delivery';
+import Development from './pages/Development';
+import CICD from './pages/CICD';
+import Reliability from './pages/Reliability';
 
 function stub(text: string) {
   return function Stub() {
@@ -15,10 +19,6 @@ function stub(text: string) {
 }
 
 // Placeholder pages — later tasks replace each with a real page module.
-const Delivery = stub('Delivery');
-const Development = stub('Development');
-const CICD = stub('CICD');
-const Reliability = stub('Reliability');
 const Insights = stub('Insights');
 const InsightDetail = stub('InsightDetail');
 const Anomalies = stub('Anomalies');
