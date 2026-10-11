@@ -220,6 +220,32 @@ a {
   color: var(--ink);
 }
 
+.public-main {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.public-main section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.public-main h1,
+.public-main h2,
+.public-main p,
+.public-main dl,
+.public-main dd,
+.public-main ol,
+.public-main ul {
+  margin: 0;
+}
+
 /* Primitives */
 
 .btn {
@@ -482,6 +508,12 @@ a {
 
   .app-header {
     padding: var(--space-3) var(--space-4);
+  }
+
+  .app-header,
+  .header-controls {
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
   }
 
   .card-head {
