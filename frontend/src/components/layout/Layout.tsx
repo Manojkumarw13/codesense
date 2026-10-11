@@ -46,6 +46,15 @@ export default function Layout() {
     closeDrawer();
   }, [location.pathname, closeDrawer]);
 
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [drawerOpen]);
+
   return (
     <div className="app-shell">
       <a href="#main-content" className="skip-link">
