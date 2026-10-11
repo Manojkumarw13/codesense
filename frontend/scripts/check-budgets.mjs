@@ -7,7 +7,11 @@ for (const f of readdirSync(dir)) {
   if (!f.endsWith('.js')) continue;
   rows.push({ file: f, gzipKB: gzipSync(readFileSync(join(dir.pathname, f))).length / 1024 });
 }
-const chart = rows.filter(r => /ScoreCharts|ScoreTrend/.test(r.file)).reduce((a, r) => a + r.gzipKB, 0);
+// Chart chunks: ScoreTrend/DimensionBars component chunks plus the Recharts
+// vendor chunk. Vite/Rollup names the shared Recharts chunk after its largest
+// internal module (generateCategoricalChart); update this pattern if a Recharts
+// upgrade changes the emitted chunk name (run build and check dist/assets).
+const chart = rows.filter(r => /ScoreCharts|ScoreTrend|DimensionBars|generateCategoricalChart/.test(r.file)).reduce((a, r) => a + r.gzipKB, 0);
 const entry = rows.filter(r => /^index-/.test(r.file)).reduce((a, r) => a + r.gzipKB, 0);
 console.table(rows.map(r => ({ ...r, gzipKB: +r.gzipKB.toFixed(1) })));
 let fail = false;
