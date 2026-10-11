@@ -4,6 +4,9 @@ import PublicLayout from './components/layout/PublicLayout';
 import DocsEntry from './pages/DocsEntry';
 import Landing from './pages/Landing';
 import Product from './pages/Product';
+import Overview from './pages/Overview';
+import Health from './pages/Health';
+import Trends from './pages/Trends';
 
 function stub(text: string) {
   return function Stub() {
@@ -12,8 +15,6 @@ function stub(text: string) {
 }
 
 // Placeholder pages — later tasks replace each with a real page module.
-const Overview = stub('Overview');
-const Health = stub('Health');
 const Delivery = stub('Delivery');
 const Development = stub('Development');
 const CICD = stub('CICD');
@@ -24,7 +25,6 @@ const Anomalies = stub('Anomalies');
 const AnomalyDetail = stub('AnomalyDetail');
 const Bottlenecks = stub('Bottlenecks');
 const BottleneckDetail = stub('BottleneckDetail');
-const Trends = stub('Trends');
 const Integrations = stub('Integrations');
 const Simulator = stub('Simulator');
 const AIAnalysis = stub('AIAnalysis');

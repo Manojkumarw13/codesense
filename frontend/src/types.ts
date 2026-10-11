@@ -23,7 +23,18 @@ export interface HealthScore {
   previous_score?: number | null;
   score_change?: number | null;
   dimensions?: Record<string, number> | null;
+  component_metrics?: Record<string, ComponentMetric | number> | null;
+  period_start?: string | null;
+  period_end?: string | null;
+  calculated_at?: string | null;
   computed_at?: string;
+}
+
+/** One entry of `HealthScore.component_metrics` (backend `health.py`). */
+export interface ComponentMetric {
+  score: number;
+  weight?: number | null;
+  metrics?: Record<string, unknown> | null;
 }
 
 export interface Insight {
