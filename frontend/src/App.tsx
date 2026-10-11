@@ -1,14 +1,6 @@
-import { Outlet, Route, Routes } from 'react-router-dom';
-
-/** Task 2 replaces this with the real app shell. */
-function Layout() {
-  return <Outlet />;
-}
-
-/** Task 3 replaces this with the real public header/footer. */
-function PublicLayout() {
-  return <Outlet />;
-}
+import { Route, Routes } from 'react-router-dom';
+import Layout from './components/layout/Layout';
+import PublicLayout from './components/layout/PublicLayout';
 
 function stub(text: string) {
   return function Stub() {
