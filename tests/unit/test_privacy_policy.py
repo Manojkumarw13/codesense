@@ -6,6 +6,8 @@ from backend.app.core.settings import settings
 from backend.app.models.core import CanonicalEvent, Organization, Team
 from backend.app.models.raw import ProviderEvent
 from backend.app.privacy.policy import (
+    PLACEHOLDER_SECRETS,
+    _effective_secret,
     count_contributors,
     is_small_team,
     mask_evidence,
@@ -160,6 +162,64 @@ def test_pseudonym_depends_on_salt(monkeypatch):
     salted = mask_identity({"actor_ref": "dev-3@codesense.io"})["actor_ref"]
     assert salted.startswith("actor-")
     assert salted != baseline
+
+
+def test_mask_identity_pseudonymises_plural_actor_keys():
+    """Plural and compound actor keys keep stable, per-element pseudonyms."""
+    masked = mask_identity({"actors": ["dev-1@x.io", "dev-2@x.io"]})
+    assert masked["actors"][0].startswith("actor-")
+    assert masked["actors"][1].startswith("actor-")
+    assert masked["actors"][0] != masked["actors"][1]
+    # stable across calls
+    again = mask_identity({"actors": ["dev-1@x.io", "dev-2@x.io"]})
+    assert again == masked
+
+    for key in (
+        "actors",
+        "reviewers",
+        "assignees",
+        "committers",
+        "authors",
+        "owners",
+        "users",
+        "developers",
+        "reporters",
+        "actor_refs",
+        "created_by",
+        "submitted_by",
+        "merged_by",
+    ):
+        assert mask_identity({key: "dev-1@x.io"})[key].startswith("actor-"), key
+
+    # email-ish plurals are still redacted, never pseudonymised
+    assert mask_identity({"emails": ["dev-1@x.io"]})["emails"] == ["***"]
+    assert mask_identity({"author_emails": ["dev-1@x.io"]})["author_emails"] == ["***"]
+
+
+def test_effective_secret_prefers_explicit_salt(monkeypatch):
+    """An explicitly configured salt is used verbatim."""
+    monkeypatch.setattr(settings, "PRIVACY_PSEUDONYM_SALT", "explicit-salt")
+    monkeypatch.setattr(settings, "SECRET_KEY", "supersecretkeyreplaceinproduction")
+    assert _effective_secret() == "explicit-salt"
+
+
+def test_effective_secret_uses_a_real_secret_key(monkeypatch):
+    """A real (non-placeholder) SECRET_KEY is used as the pseudonym key."""
+    monkeypatch.setattr(settings, "PRIVACY_PSEUDONYM_SALT", "")
+    monkeypatch.setattr(settings, "SECRET_KEY", "a-real-deployment-secret")
+    assert _effective_secret() == "a-real-deployment-secret"
+
+
+def test_effective_secret_never_uses_a_shipped_placeholder(monkeypatch):
+    """A placeholder SECRET_KEY must not become the pseudonym key."""
+    monkeypatch.setattr(settings, "PRIVACY_PSEUDONYM_SALT", "")
+    for placeholder in ("supersecretkeyreplaceinproduction", "changeme"):
+        monkeypatch.setattr(settings, "SECRET_KEY", placeholder)
+        secret = _effective_secret()
+        assert secret != placeholder
+        assert secret not in PLACEHOLDER_SECRETS
+        # stable for the lifetime of the process
+        assert secret == _effective_secret()
 
 
 def test_count_contributors_respects_window():
