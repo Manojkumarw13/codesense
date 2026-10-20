@@ -26,9 +26,11 @@ import hmac
 import re
 import secrets
 import uuid
+from collections.abc import Iterable
 from datetime import datetime
 from typing import Any
 
+from sqlalchemy import distinct, func, literal, select, union_all
 from sqlalchemy.orm import Session
 
 from backend.app.core.settings import settings
@@ -36,7 +38,9 @@ from backend.app.privacy.gateway import EMAIL_RE
 
 __all__ = [
     "MIN_TEAM_SIZE",
+    "Scope",
     "count_contributors",
+    "count_contributors_by_scope",
     "is_small_team",
     "mask_evidence",
     "mask_identity",
@@ -47,6 +51,14 @@ MIN_TEAM_SIZE: int = settings.MIN_TEAM_SIZE
 
 REDACTED = "***"
 SUPPRESSION_REASON = "small_team_aggregation_threshold"
+
+# A counting scope: ``(team_id, organization_id, since, until)``. ``None`` for
+# ``since``/``until`` means "the whole history of the scope".
+Scope = tuple[uuid.UUID | None, uuid.UUID | None, datetime | None, datetime | None]
+
+# How many scopes are folded into a single statement. A larger page is split
+# into several statements so the generated SQL stays bounded.
+_SCOPE_BATCH_SIZE = 100
 
 # Keys whose value identifies an actor: pseudonymised (stable per actor).
 ACTOR_KEY_TOKENS = frozenset(
@@ -116,6 +128,34 @@ def _is_bare_email(value: str) -> bool:
     return "@" in value and value.count("@") == 1 and " " not in value
 
 
+def _actor_ref_filters(
+    team_id: uuid.UUID | None,
+    organization_id: uuid.UUID | None,
+    since: datetime | None,
+    until: datetime | None,
+) -> list[Any]:
+    """The WHERE clauses shared by every contributor count.
+
+    An event only counts as a contributor when it names an actor; ``NULL``
+    and empty actor references are excluded.
+    """
+    from backend.app.models.core import CanonicalEvent
+
+    filters: list[Any] = [
+        CanonicalEvent.actor_ref.isnot(None),
+        CanonicalEvent.actor_ref != "",
+    ]
+    if team_id is not None:
+        filters.append(CanonicalEvent.team_id == team_id)
+    if organization_id is not None:
+        filters.append(CanonicalEvent.organization_id == organization_id)
+    if since is not None:
+        filters.append(CanonicalEvent.occurred_at >= since)
+    if until is not None:
+        filters.append(CanonicalEvent.occurred_at <= until)
+    return filters
+
+
 def count_contributors(
     db: Session,
     team_id: uuid.UUID | None,
@@ -135,24 +175,60 @@ def count_contributors(
       every tenant and would silently under-mask a small team.
 
     ``since``/``until`` bound the ``occurred_at`` window inclusively.
+
+    The count is computed by the database (``count(DISTINCT actor_ref)``), so
+    no event row is transferred into Python.
     """
     from backend.app.models.core import CanonicalEvent
 
     if team_id is None and organization_id is None:
         return 0
 
-    query = db.query(CanonicalEvent.actor_ref).filter(
-        CanonicalEvent.actor_ref.isnot(None)
+    query = db.query(func.count(distinct(CanonicalEvent.actor_ref))).filter(
+        *_actor_ref_filters(team_id, organization_id, since, until)
     )
-    if team_id is not None:
-        query = query.filter(CanonicalEvent.team_id == team_id)
-    if organization_id is not None:
-        query = query.filter(CanonicalEvent.organization_id == organization_id)
-    if since is not None:
-        query = query.filter(CanonicalEvent.occurred_at >= since)
-    if until is not None:
-        query = query.filter(CanonicalEvent.occurred_at <= until)
-    return len({row[0] for row in query.all() if row[0]})
+    return query.scalar() or 0
+
+
+def count_contributors_by_scope(
+    db: Session, scopes: Iterable[Scope]
+) -> dict[Scope, int]:
+    """Contributor counts for several scopes, fetched in one statement.
+
+    Every distinct scope is counted once, with ``count(DISTINCT actor_ref)``
+    evaluated by the database. A page of rows therefore costs one query
+    instead of one query per row.
+
+    A scope that carries neither a team nor an organisation is fail-closed:
+    it counts ``0`` and is never sent to the database.
+    """
+    from backend.app.models.core import CanonicalEvent
+
+    counts: dict[Scope, int] = {}
+    pending: list[Scope] = []
+    for scope in scopes:
+        if scope in counts:
+            continue
+        team_id, organization_id, _since, _until = scope
+        counts[scope] = 0
+        if team_id is None and organization_id is None:
+            continue
+        pending.append(scope)
+
+    for start in range(0, len(pending), _SCOPE_BATCH_SIZE):
+        batch = pending[start : start + _SCOPE_BATCH_SIZE]
+        statements = [
+            select(
+                literal(index).label("scope_index"),
+                func.count(distinct(CanonicalEvent.actor_ref)).label("contributors"),
+            ).filter(*_actor_ref_filters(*scope))
+            for index, scope in enumerate(batch)
+        ]
+        union = union_all(*statements).subquery()
+        rows = db.execute(select(union.c.scope_index, union.c.contributors)).all()
+        for index, contributors in rows:
+            counts[batch[index]] = int(contributors or 0)
+    return counts
 
 
 def is_small_team(contributor_count: int, min_team_size: int | None = None) -> bool:

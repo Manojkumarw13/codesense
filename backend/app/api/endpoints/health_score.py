@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
 from backend.app.models.analytics import HealthScore
 from backend.app.privacy.policy import (
-    count_contributors,
+    Scope,
+    count_contributors_by_scope,
     is_small_team,
     mask_evidence,
     suppression_metadata,
@@ -18,20 +19,61 @@ from backend.app.privacy.policy import (
 router = APIRouter()
 
 
-def _serialise_health_score(row: HealthScore, db: Session) -> dict[str, Any]:
+def _scope_base(row: HealthScore) -> tuple[uuid.UUID | None, uuid.UUID | None]:
+    """The team / organisation a health score belongs to."""
+    return (
+        getattr(row, "team_id", None),
+        getattr(row, "organization_id", None),
+    )
+
+
+def _period_scope(row: HealthScore) -> Scope:
+    """The scope of the score's own period."""
+    team_id, organization_id = _scope_base(row)
+    return (
+        team_id,
+        organization_id,
+        getattr(row, "period_start", None),
+        getattr(row, "period_end", None),
+    )
+
+
+def _all_time_scope(row: HealthScore) -> Scope:
+    """The scope of the team's whole history."""
+    team_id, organization_id = _scope_base(row)
+    return (team_id, organization_id, None, None)
+
+
+def _effective_contributors(counts: dict[Scope, int], row: HealthScore) -> int:
+    """The most conservative contributor count used for masking.
+
+    Masking must trigger when *either* scope is below the threshold, so the
+    effective count is ``min(period count, all-time count)``: a team with
+    many lifetime contributors but a single contributor inside the scored
+    period still has its metric evidence masked, because that period
+    describes one person.
+    """
+    return min(counts[_period_scope(row)], counts[_all_time_scope(row)])
+
+
+def _serialise_health_score(
+    row: HealthScore, db: Session, contributors: int | None = None
+) -> dict[str, Any]:
     """Serialise a health score, masking metric evidence for small teams.
 
     Masking happens at read time only: the stored ``component_metrics`` are
     never mutated, the aggregate score stays visible and only the metric
     level evidence is replaced with nulls.
+
+    ``contributors`` is the effective (most conservative) count. It is
+    optional so a single row can be serialised on its own; a page of rows
+    passes the pre-computed counts in, so one query serves the whole page.
     """
-    contributors = count_contributors(
-        db,
-        row.team_id,
-        row.period_start,
-        row.period_end,
-        organization_id=row.organization_id,
-    )
+    if contributors is None:
+        counts = count_contributors_by_scope(
+            db, [_period_scope(row), _all_time_scope(row)]
+        )
+        contributors = _effective_contributors(counts, row)
     component_metrics = dict(row.component_metrics or {})
     privacy: dict[str, Any] = {"suppressed": False}
     if is_small_team(contributors):
@@ -88,11 +130,19 @@ def list_health_scores(
         .limit(limit)
         .all()
     )
+    scopes: list[Scope] = []
+    for row in items:
+        scopes.append(_period_scope(row))
+        scopes.append(_all_time_scope(row))
+    counts = count_contributors_by_scope(db, scopes)
     return {
         "total": total,
         "skip": skip,
         "limit": limit,
-        "items": [_serialise_health_score(r, db) for r in items],
+        "items": [
+            _serialise_health_score(r, db, _effective_contributors(counts, r))
+            for r in items
+        ],
     }
 
 

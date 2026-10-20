@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
 from backend.app.models.analytics import Bottleneck
 from backend.app.privacy.policy import (
-    count_contributors,
+    Scope,
+    count_contributors_by_scope,
     is_small_team,
     mask_evidence,
     suppression_metadata,
@@ -23,23 +24,40 @@ def _optional_id(value: Any) -> str | None:
     return str(value) if value is not None else None
 
 
-def _serialise(row: Any, db: Session) -> dict[str, Any]:
+def _scope(row: Any) -> Scope:
+    """The team / organisation a detection row belongs to."""
+    return (
+        getattr(row, "team_id", None),
+        getattr(row, "organization_id", None),
+        None,
+        None,
+    )
+
+
+def _serialise(
+    row: Any, db: Session, contributors: int | None = None
+) -> dict[str, Any]:
     """Serialise a detection row, masking evidence for small teams.
 
     Every column the row actually has is kept, so the response keeps its
     previous shape; only the metric level evidence is replaced with nulls
     and a ``privacy`` block explains the decision.
+
+    The contributor count is the all-time count of the row's scope.
+    ``contributors`` is optional so a single row can be serialised on its
+    own; a page of rows passes the pre-computed counts in, so one query
+    serves the whole page.
     """
-    contributors = count_contributors(
-        db,
-        getattr(row, "team_id", None),
-        organization_id=getattr(row, "organization_id", None),
-    )
+    if contributors is None:
+        scope = _scope(row)
+        contributors = count_contributors_by_scope(db, [scope])[scope]
     privacy: dict[str, Any] = {"suppressed": False}
     evidence = getattr(row, "evidence", None)
     if is_small_team(contributors):
         evidence = mask_evidence(evidence)
         privacy = suppression_metadata(contributors)
+    # `source_metrics` and `metric_id` are read by the shipped dashboard
+    # (InsightDetail.tsx / AnomalyDetail.tsx) - do not trim this key set.
     return {
         "id": str(row.id),
         "organization_id": _optional_id(getattr(row, "organization_id", None)),
@@ -94,11 +112,12 @@ def list_bottlenecks(
         .limit(limit)
         .all()
     )
+    counts = count_contributors_by_scope(db, [_scope(r) for r in items])
     return {
         "total": total,
         "skip": skip,
         "limit": limit,
-        "items": [_serialise(r, db) for r in items],
+        "items": [_serialise(r, db, counts[_scope(r)]) for r in items],
     }
 
 
