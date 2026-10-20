@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.database import get_db
 from backend.app.core.exceptions import ConflictError
+from backend.app.core.settings import settings
 from backend.app.models.raw import ProviderEvent
+from backend.app.privacy.policy import mask_identity
 from backend.app.schemas.event import ProviderEventCreate
 
 router = APIRouter()
@@ -20,6 +22,28 @@ def compute_payload_hash(payload: dict[str, Any]) -> str:
     """Computes SHA-256 hash of the sorted JSON payload."""
     serialized = json.dumps(payload, sort_keys=True)
     return hashlib.sha256(serialized.encode()).hexdigest()
+
+
+def serialise_raw_event(row: ProviderEvent) -> dict[str, Any]:
+    """Serialise a raw event with identity masked and payload hidden by default.
+
+    Raw payloads are only exposed when ``settings.EXPOSE_RAW_PAYLOADS`` is
+    enabled, and even then actor references are pseudonymised.
+    """
+    payload = None
+    if settings.EXPOSE_RAW_PAYLOADS:
+        payload = mask_identity(row.payload)
+    return {
+        "id": str(row.id),
+        "provider": row.provider,
+        "external_event_id": row.external_event_id,
+        "event_type": row.event_type,
+        "event_timestamp": row.event_timestamp,
+        "source": row.source,
+        "processing_status": row.processing_status,
+        "payload": payload,
+        "created_at": row.created_at,
+    }
 
 
 @router.post("/events", status_code=status.HTTP_201_CREATED)
@@ -198,5 +222,5 @@ def list_raw_events(
         "total": total,
         "skip": skip,
         "limit": limit,
-        "items": events
+        "items": [serialise_raw_event(e) for e in events]
     }
