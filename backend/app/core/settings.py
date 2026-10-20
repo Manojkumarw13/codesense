@@ -49,6 +49,7 @@ class Settings(BaseSettings):
 
     # Privacy & Offline (Phase 20)
     MIN_TEAM_SIZE: int = 5
+    PRIVACY_PSEUDONYM_SALT: str = ""
     EXPOSE_RAW_PAYLOADS: bool = False
     OFFLINE_PROBE_URL: str = "https://connectivitycheck.gstatic.com/generate_204"
     OFFLINE_PROBE_TIMEOUT_SECONDS: float = 2.0
