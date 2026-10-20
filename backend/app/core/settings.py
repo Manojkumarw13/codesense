@@ -47,6 +47,13 @@ class Settings(BaseSettings):
     PROMETHEUS_PORT: int = 9090
     OTEL_EXPORTER_OTLP_ENDPOINT: str | None = None
 
+    # Privacy & Offline (Phase 20)
+    MIN_TEAM_SIZE: int = 5
+    EXPOSE_RAW_PAYLOADS: bool = False
+    OFFLINE_PROBE_URL: str = "https://connectivitycheck.gstatic.com/generate_204"
+    OFFLINE_PROBE_TIMEOUT_SECONDS: float = 2.0
+    OFFLINE_PROBE_INTERVAL_SECONDS: int = 30
+
     @property
     def REDIS_URI(self) -> str:
         if self.REDIS_URL:
