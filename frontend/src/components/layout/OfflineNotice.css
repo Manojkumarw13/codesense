@@ -17,7 +17,7 @@
 .offline-notice {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
   padding: var(--space-2) var(--space-4);
   width: 100%;
   box-sizing: border-box;
@@ -49,7 +49,7 @@
 }
 
 .offline-notice__headline {
-  margin: 0 0 var(--space-1) 0;
+  margin: 0 0 var(--space-2) 0;
   font-size: 14px;
   font-weight: 600;
   color: var(--ink);
