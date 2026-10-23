@@ -3,6 +3,7 @@
 No network, no database: the LLM seam (`_call_llm`) and the DB session are
 both faked. Privacy tests assert REQUEST BLOCKED the way Phase 23 will.
 """
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -12,6 +13,7 @@ from fastapi.testclient import TestClient
 from backend.app.ai import explainer
 from backend.app.ai.client import LlmUnavailableError
 from backend.app.api.endpoints import ai as ai_endpoint
+from backend.app.core.connectivity import InternetState
 from backend.app.core.database import get_db
 from backend.app.privacy.gateway import PrivacyBlockedError, PrivacyGateway
 
@@ -59,7 +61,9 @@ def test_gateway_strips_raw_payload_but_passes():
 def test_gateway_passes_team_aggregates():
     context = {
         "team_id": "team-alpha",
-        "health_scores": [{"score": 82.5, "component_metrics": {"delivery_flow": 90.0}}],
+        "health_scores": [
+            {"score": 82.5, "component_metrics": {"delivery_flow": 90.0}}
+        ],
         "bottlenecks": [],
     }
     assert PrivacyGateway().sanitize(context) == context
@@ -85,7 +89,9 @@ def test_explain_falls_back_without_llm(monkeypatch):
 
 
 def test_explain_uses_llm_text_verbatim(monkeypatch):
-    monkeypatch.setattr(explainer, "_call_llm", lambda *a, **k: ("Cloud says hi.", "test-model"))
+    monkeypatch.setattr(
+        explainer, "_call_llm", lambda *a, **k: ("Cloud says hi.", "test-model")
+    )
     result = explainer.explain(make_empty_db(), "trend_summary")
     assert result["source"] == "CLOUD_AI"
     assert result["explanation"] == "Cloud says hi."
@@ -94,7 +100,9 @@ def test_explain_uses_llm_text_verbatim(monkeypatch):
 
 def test_fallback_covers_all_use_cases(monkeypatch):
     monkeypatch.setattr(
-        explainer, "_call_llm", lambda *a, **k: (_ for _ in ()).throw(LlmUnavailableError("x"))
+        explainer,
+        "_call_llm",
+        lambda *a, **k: (_ for _ in ()).throw(LlmUnavailableError("x")),
     )
     for use_case in explainer.USE_CASES:
         result = explainer.explain(make_empty_db(), use_case)
@@ -104,11 +112,17 @@ def test_fallback_covers_all_use_cases(monkeypatch):
 # --- Endpoint seam (router only, faked DB + LLM) ---
 
 
-def build_client(monkeypatch, llm_text: str | None = "Endpoint explanation.") -> TestClient:
+def build_client(
+    monkeypatch, llm_text: str | None = "Endpoint explanation."
+) -> TestClient:
     app = FastAPI()
     app.include_router(ai_endpoint.router)
     app.dependency_overrides[get_db] = lambda: make_empty_db()
+    # Force the AI dependency online so these tests exercise the LLM path
+    # rather than the offline short-circuit (no network is ever used).
+    monkeypatch.setattr(ai_endpoint, "get_internet_state", lambda: InternetState.ONLINE)
     if llm_text is None:
+
         def boom(*args, **kwargs):
             raise LlmUnavailableError("down")
 
@@ -149,4 +163,4 @@ def test_status_endpoint_shape():
     resp = client.get("/ai/status")
     assert resp.status_code == 200
     body = resp.json()
-    assert set(body) == {"configured", "model", "mode"}
+    assert set(body) == {"configured", "model", "mode", "internet", "reason"}
