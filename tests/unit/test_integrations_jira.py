@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import base64
 import uuid
+from datetime import datetime, timezone
 from unittest.mock import Mock, patch
 
 from backend.app.integrations.jira import (
@@ -107,6 +108,22 @@ def test_jira_fetch_events_paginates_and_filters_since(mock_request):
     assert kwargs["params"]["startAt"] == 0
     expected = base64.b64encode(b"user@example.com:at_test").decode("ascii")
     assert kwargs["headers"]["Authorization"] == f"Basic {expected}"
+
+
+@patch("requests.Session.request")
+def test_jira_fetch_events_formats_datetime_since_for_jql(mock_request):
+    response = _make_response(
+        json_data={"startAt": 0, "maxResults": 50, "isLast": True, "issues": []}
+    )
+    mock_request.return_value = response
+
+    conn = _connector()
+    since_dt = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    conn.fetch_events(since=since_dt)
+
+    _, kwargs = mock_request.call_args
+    # A datetime `since` must be ISO-8601 formatted for valid Jira JQL.
+    assert kwargs["params"]["jql"] == 'updated >= "2026-01-01T00:00:00+0000"'
 
 
 @patch("requests.Session.request")
@@ -296,6 +313,20 @@ def test_jira_map_missing_key_skipped():
     assert raw == []
 
 
+def test_jira_filter_by_since_drops_unparseable_updated():
+    """Events whose ``fields.updated`` cannot be parsed are silently dropped
+    when ``since`` is set (belt-and-suspenders client-side filter)."""
+    conn = _connector()
+    events = [
+        {"key": "PROJ-1", "fields": {"updated": "not-a-timestamp"}},
+        {"key": "PROJ-2", "fields": {"updated": "2026-01-02T00:00:00.000Z"}},
+        {"key": "PROJ-3", "fields": {}},
+    ]
+    filtered = conn._filter_by_since(events, "2026-01-01T00:00:00Z")
+    assert len(filtered) == 1
+    assert filtered[0]["key"] == "PROJ-2"
+
+
 # --- webhook ---
 
 
@@ -343,4 +374,13 @@ def test_jira_webhook_signature_verification():
     body = b'{"webhookEvent":"jira:issue_created"}'
     assert conn.verify_webhook_signature(body, "whsec_test") is True
     assert conn.verify_webhook_signature(body, "wrong-secret") is False
+    assert conn.verify_webhook_signature(body, None) is False
+
+
+def test_jira_webhook_signature_missing_secret():
+    conn = _connector(extra_config={"webhook_secret": ""})
+    body = b'{"webhookEvent":"jira:issue_created"}'
+    # An empty configured secret never matches a non-empty signature.
+    assert conn.verify_webhook_signature(body, "whsec_test") is False
+    assert conn.verify_webhook_signature(body, "") is False
     assert conn.verify_webhook_signature(body, None) is False

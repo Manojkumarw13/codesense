@@ -107,7 +107,8 @@ class JiraConnector(BaseProviderConnector):
         url = f"{base_url.rstrip('/')}/rest/api/3/search"
 
         start_at = int(cursor) if cursor and str(cursor).isdigit() else 0
-        jql = f'updated >= "{since}"' if since else "updated >= -1w"
+        since_jql = self._format_since_for_jql(since)
+        jql = f'updated >= "{since_jql}"' if since_jql else "updated >= -1w"
         params: dict[str, Any] = {
             "jql": jql,
             "maxResults": self.MAX_RESULTS,
@@ -239,6 +240,22 @@ class JiraConnector(BaseProviderConnector):
         return hmac.compare_digest(signature, secret)
 
     # --- helpers ---
+
+    @staticmethod
+    def _format_since_for_jql(since: datetime | str | None) -> str | None:
+        """Format ``since`` as a Jira JQL-compatible datetime literal.
+
+        ``BaseProviderConnector.fetch_events`` types ``since`` as
+        ``datetime | None``, but Jira JQL expects an ISO-8601 string such as
+        ``"2026-01-01T00:00:00+0000"``. A ``datetime`` is formatted with an
+        explicit UTC offset; an already-string ``since`` is passed through so
+        callers (and tests) can keep supplying raw JQL literals.
+        """
+        if since is None:
+            return None
+        if isinstance(since, datetime):
+            return since.strftime("%Y-%m-%dT%H:%M:%S%z")
+        return str(since)
 
     @staticmethod
     def _parse_timestamp(value: Any) -> datetime | None:
