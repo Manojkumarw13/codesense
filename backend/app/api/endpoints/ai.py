@@ -1,7 +1,6 @@
 """AI explainer API — Phase 19 (optional, synchronous, privacy-gated)."""
 
 import uuid
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -23,9 +22,9 @@ router = APIRouter()
 @router.post("/ai/explain")
 def explain_analytics(
     use_case: str = Query(..., description=f"One of: {', '.join(USE_CASES)}"),
-    team_id: Optional[uuid.UUID] = Query(None),
+    team_id: uuid.UUID | None = Query(None),  # noqa: B008
     limit: int = Query(10, ge=1, le=50),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db),  # noqa: B008
 ):
     """Generate a synchronous real-time AI explanation of team analytics.
 

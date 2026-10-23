@@ -19,11 +19,11 @@ def _ai_availability(internet: InternetState) -> bool:
 
 
 @router.get("/health")
-def get_health(db: Session = Depends(get_db)):
+def get_health(db: Session = Depends(get_db)):  # noqa: B008
     try:
         db.execute(text("SELECT 1"))
         db_status = "connected"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - DB failure must degrade, never crash health
         raise DatabaseError(message=f"Database connection failed: {e!s}")
 
     internet = get_internet_state()
@@ -37,12 +37,12 @@ def get_health(db: Session = Depends(get_db)):
 
 
 @router.get("/health/detailed")
-def get_detailed_health(db: Session = Depends(get_db)):
+def get_detailed_health(db: Session = Depends(get_db)):  # noqa: B008
     """Detailed health for observability / k8s probes."""
     try:
         db.execute(text("SELECT 1"))
         db_status = "connected"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - DB failure must degrade, never crash health
         raise DatabaseError(message=f"Database connection failed: {e!s}")
 
     # Infrastructure checks – never raise, just report degraded
