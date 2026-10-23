@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import OfflineNotice from './OfflineNotice';
+import { apiClient } from '../../api/client';
+import { useApi } from '../../hooks/useApi';
 
 function eyebrowForPath(pathname: string): string {
   if (
@@ -33,6 +36,14 @@ export default function Layout() {
   const eyebrow = eyebrowForPath(location.pathname);
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+
+  // Health state (mode, ai_available) is surfaced by OfflineNotice below.
+  // OfflineNotice itself does not fetch — it receives these as props.
+  const { data: health } = useApi(() => apiClient.getHealth(), []);
+  const mode: 'normal' | 'offline' =
+    (health as { mode?: string } | null)?.mode === 'offline' ? 'offline' : 'normal';
+  const aiAvailable =
+    health == null ? true : Boolean((health as { ai_available?: unknown } | null)?.ai_available);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -75,6 +86,9 @@ export default function Layout() {
       <div className="app-main">
         <Header onMenuClick={() => setDrawerOpen((open) => !open)} />
         <div className="app-content">
+          <div className="offline-notice-row">
+            <OfflineNotice mode={mode} aiAvailable={aiAvailable} />
+          </div>
           <p className="eyebrow">{eyebrow}</p>
           <main id="main-content" tabIndex={-1}>
             <Outlet />

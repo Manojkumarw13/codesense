@@ -1,0 +1,67 @@
+/* Offline / AI-unavailable notice banner.
+ *
+ * Styles use design tokens only (frontend/src/styles/tokens.css):
+ *   --panel, --line, --ink, --ink-2, --accent, --radius-md,
+ *   --space-2, --space-4, --space-10
+ *
+ * Layout.tsx wraps this component in `.offline-notice-row`, a reserved-height
+ * slot (min-height: var(--space-10)) so the page never reflows when the
+ * notice appears or disappears.
+ */
+
+/* Reserved-height row rendered by Layout.tsx, always present. */
+.offline-notice-row {
+  min-height: var(--space-10);
+}
+
+.offline-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.offline-notice__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.offline-notice__icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.offline-notice__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.offline-notice__headline {
+  margin: 0 0 var(--space-1) 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.offline-notice__body {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-2);
+  line-height: 1.5;
+  max-width: 70ch;
+  text-wrap: pretty;
+}

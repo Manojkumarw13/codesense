@@ -9,4 +9,13 @@ describe('Layout', () => {
     expect(document.querySelector('main#main-content')).toBeTruthy();
     expect(document.querySelector('[aria-current="page"]')).toBeTruthy();
   });
+
+  it('reserves an offline-notice row as the first child of .app-content', () => {
+    render(<MemoryRouter initialEntries={['/app']}><Layout /></MemoryRouter>);
+    const content = document.querySelector('.app-content');
+    expect(content).toBeTruthy();
+    const row = content?.firstElementChild;
+    expect(row).toBeTruthy();
+    expect(row?.classList.contains('offline-notice-row')).toBe(true);
+  });
 });
