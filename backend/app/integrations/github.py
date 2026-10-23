@@ -34,18 +34,22 @@ class GitHubError(Exception):
     """Raised when the GitHub API returns a non-2xx response."""
 
 
+class GitHubConfigurationError(ValueError):
+    """Raised when the GitHub connector is misconfigured (e.g. missing owner/repo)."""
+
+
 class GitHubConnector(BaseProviderConnector):
     """GitHub REST API connector.
 
-    Reads its token and webhook secret from ``config`` (set on the
-    :class:`ConnectorConfig`). ``owner``/``repo`` default to ``"o"``/``"r"``
-    when not configured, keeping the connector usable out of the box.
+    Reads its token, webhook secret, and ``owner``/``repo`` from ``config``
+    (set on the :class:`ConnectorConfig`). ``owner`` and ``repo`` are required;
+    ``fetch_events`` raises :class:`GitHubConfigurationError` when they are
+    absent. Optional ``owner``/``repo`` arguments to ``fetch_events`` override
+    the configured values for a single call.
     """
 
     BASE_URL = "https://api.github.com"
 
-    DEFAULT_OWNER = "o"
-    DEFAULT_REPO = "r"
     PER_PAGE = 100
     REQUEST_TIMEOUT_SECONDS = 30
 
@@ -91,8 +95,13 @@ class GitHubConnector(BaseProviderConnector):
         the next page number as a string (or ``None`` when there is no next
         page) and ``has_more`` reflects the ``Link: rel="next"`` header.
         """
-        owner = owner or self.config.get("owner", self.DEFAULT_OWNER)
-        repo = repo or self.config.get("repo", self.DEFAULT_REPO)
+        owner = owner or self.config.get("owner")
+        repo = repo or self.config.get("repo")
+        if not owner or not repo:
+            raise GitHubConfigurationError(
+                "GitHubConnector requires 'owner' and 'repo' in config "
+                "(or as fetch_events arguments)"
+            )
         url = f"{self.BASE_URL}/repos/{owner}/{repo}/events"
 
         page = int(cursor) if cursor and cursor.isdigit() else 1
@@ -109,7 +118,12 @@ class GitHubConnector(BaseProviderConnector):
                 f"GitHub API returned HTTP {resp.status_code}: {resp.text[:200]}"
             )
 
-        data = resp.json()
+        try:
+            data = resp.json()
+        except ValueError as exc:
+            raise GitHubError(
+                f"GitHub API returned non-JSON response (HTTP {resp.status_code})"
+            ) from exc
         page_events = data if isinstance(data, list) else []
         events = self._filter_by_since(page_events, since)
 
@@ -151,10 +165,13 @@ class GitHubConnector(BaseProviderConnector):
             event_type = self._resolve_event_type(payload)
             if event_type is None:
                 continue
+            event_id = payload.get("id")
+            if event_id is None:
+                continue
             raw_events.append(
                 {
                     "provider": "github",
-                    "external_event_id": f"github:{payload.get('id')}",
+                    "external_event_id": f"github:{event_id}",
                     "event_type": event_type,
                     "event_timestamp": self._parse_timestamp(payload.get("created_at")),
                     "payload": dict(payload),
