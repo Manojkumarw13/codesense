@@ -95,6 +95,7 @@ def _seed_team(
 
 def _seed_detections(db, organization_id, team_id) -> dict[str, uuid.UUID]:
     """Seed one insight, one anomaly and one bottleneck for a team."""
+    now = datetime.now(timezone.utc)
     metric = MetricDefinition(
         id=uuid.uuid4(),
         metric_key=f"metric-{uuid.uuid4().hex[:8]}",
@@ -116,6 +117,7 @@ def _seed_detections(db, organization_id, team_id) -> dict[str, uuid.UUID]:
         source_metrics={"deployment_frequency": 3.0},
         generated_by="RULE_ENGINE",
         status="ACTIVE",
+        created_at=now,
     )
     anomaly = Anomaly(
         id=uuid.uuid4(),
@@ -128,7 +130,7 @@ def _seed_detections(db, organization_id, team_id) -> dict[str, uuid.UUID]:
         change_percent=-80.0,
         confidence=0.9,
         evidence=dict(EVIDENCE),
-        detected_at=datetime.now(timezone.utc),
+        detected_at=now,
     )
     bottleneck = Bottleneck(
         id=uuid.uuid4(),
@@ -139,7 +141,7 @@ def _seed_detections(db, organization_id, team_id) -> dict[str, uuid.UUID]:
         title="Review queue",
         description="Reviews queue up.",
         evidence=dict(EVIDENCE),
-        detected_at=datetime.now(timezone.utc),
+        detected_at=now,
     )
     db.add_all([insight, anomaly, bottleneck])
     db.commit()
@@ -322,6 +324,43 @@ def seeded_team_with_one_active_contributor():
     db = SessionLocal()
     try:
         _cleanup(db, organization_id, team_id, raw_ids)
+    finally:
+        db.close()
+
+
+@pytest.fixture()
+def seeded_team_with_one_recent_contributor():
+    """A team with many lifetime contributors but one inside the window.
+
+    The lapsed contributors are older than
+    ``settings.PRIVACY_DETECTION_WINDOW_DAYS``, so only the recent one is
+    inside the trailing window that ends at a detection's timestamp.
+    """
+    db = SessionLocal()
+    organization_id = team_id = None
+    raw_ids: list[uuid.UUID] = []
+    ids: dict[str, uuid.UUID] = {}
+    try:
+        now = datetime.now(timezone.utc)
+        events = [
+            (f"lapsed-{index}@x.io", now - timedelta(days=45))
+            for index in range(settings.MIN_TEAM_SIZE)
+        ]
+        events.append(("recent@x.io", now - timedelta(hours=1)))
+        organization_id, team_id, raw_ids = _seed_team(db, events)
+        ids = _seed_detections(db, organization_id, team_id)
+    finally:
+        db.close()
+    yield {"team_id": team_id, "organization_id": organization_id, **ids}
+    db = SessionLocal()
+    try:
+        _cleanup(
+            db,
+            organization_id,
+            team_id,
+            raw_ids,
+            metric_id=ids["metric"],
+        )
     finally:
         db.close()
 
@@ -534,6 +573,31 @@ def test_health_score_masks_when_only_one_contributor_in_period(
     assert metrics["deployment_frequency"]["value"] is None
 
 
+def test_detections_mask_when_only_one_contributor_in_window(
+    seeded_team_with_one_recent_contributor,
+):
+    """Many lifetime contributors but one in the window -> still masked.
+
+    A detection describes the period it was raised in. When only one person
+    was active in that window the evidence describes one person and must
+    not be readable, however many contributors the team had in total.
+    """
+    seeded = seeded_team_with_one_recent_contributor
+    params = {"team_id": str(seeded["team_id"])}
+    cases = [
+        ("/api/v1/insights", "insight"),
+        ("/api/v1/anomalies", "anomaly"),
+        ("/api/v1/bottlenecks", "bottleneck"),
+    ]
+    for path, key in cases:
+        resp = client.get(path, params=params)
+        assert resp.status_code == 200, path
+        item = next(i for i in resp.json()["items"] if i["id"] == str(seeded[key]))
+        assert item["evidence"]["deployment_frequency"]["value"] is None, path
+        assert item["privacy"]["suppressed"] is True, path
+        assert item["privacy"]["contributors"] == 1, path
+
+
 def test_contributor_count_is_queried_once_per_scope(
     seeded_small_team, counted_queries
 ):
@@ -557,7 +621,9 @@ def test_contributor_count_is_queried_once_per_scope(
                     source_metrics={},
                     generated_by="RULE_ENGINE",
                     status="ACTIVE",
-                    created_at=now,
+                    # A distinct timestamp per row -> a distinct detection
+                    # window per row; the count must still cost one query.
+                    created_at=now - timedelta(minutes=index),
                 )
             )
         db.commit()

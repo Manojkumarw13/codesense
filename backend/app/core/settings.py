@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     # finally to a random per-process secret (never a shipped placeholder).
     PRIVACY_PSEUDONYM_SALT: str = ""
     EXPOSE_RAW_PAYLOADS: bool = False
+    # Trailing window (days) a detection's contributor count is measured
+    # over. A detection is masked when either its all-time count or its
+    # window count is below MIN_TEAM_SIZE.
+    PRIVACY_DETECTION_WINDOW_DAYS: int = 30
     OFFLINE_PROBE_URL: str = "https://connectivitycheck.gstatic.com/generate_204"
     OFFLINE_PROBE_TIMEOUT_SECONDS: float = 2.0
     OFFLINE_PROBE_INTERVAL_SECONDS: int = 30
