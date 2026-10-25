@@ -79,3 +79,39 @@ def test_refresh_issues_new_access_token():
 def test_me_requires_authentication():
     resp = client.get("/api/v1/auth/me")
     assert resp.status_code == 401
+
+
+def test_refresh_invalid_token_401():
+    resp = client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": "garbage.token.value"}
+    )
+    assert resp.status_code == 401
+
+
+def test_refresh_access_token_rejected_401():
+    _user_id, _ = _seed_user()
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "alice@example.com", "password": "Password1!"},
+    )
+    access_token = login.json()["access_token"]
+    resp = client.post("/api/v1/auth/refresh", json={"refresh_token": access_token})
+    assert resp.status_code == 401
+
+
+def test_me_success_with_token():
+    _user_id, _ = _seed_user()
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "alice@example.com", "password": "Password1!"},
+    )
+    access_token = login.json()["access_token"]
+    resp = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["email"] == "alice@example.com"
+    assert "DEVELOPER" in body["roles"]
+    assert "Auth Team" in body["teams"]
