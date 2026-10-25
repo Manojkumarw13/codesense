@@ -8,6 +8,7 @@ they never carry developer identity beyond what the schema already stores.
 from __future__ import annotations
 
 import datetime as _dt
+import uuid
 from typing import Any
 
 import bcrypt
@@ -77,9 +78,11 @@ def get_current_user(db: Session, token: str) -> User:
     user_id: str | None = payload.get("sub")
     if user_id is None:
         raise AuthError(status_code=401, detail="Could not validate credentials")
-    import uuid
-
-    user = db.query(User).filter(User.id == uuid.UUID(user_id)).first()
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except (ValueError, AttributeError):
+        raise AuthError(status_code=401, detail="Could not validate credentials")
+    user = db.query(User).filter(User.id == user_uuid).first()
     if user is None or user.status != "ACTIVE":
         raise AuthError(status_code=401, detail="User inactive or not found")
     return user

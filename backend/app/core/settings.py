@@ -1,3 +1,4 @@
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -6,7 +7,7 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = "supersecretkeyreplaceinproduction"
-
+    
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
@@ -18,7 +19,7 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str | None = None
     LLM_MODEL: str | None = "google/antigravity-gemini-3.5-flash"
     AI_GATEWAY_URL: str | None = None
-
+    
     # ML Settings
     ML_MODELS_PATH: str = "ml_models"
     FEATURE_STORE_ENABLED: bool = True
@@ -98,6 +99,5 @@ class Settings(BaseSettings):
         if self.DATABASE_URL:
             return self.DATABASE_URL
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-
 
 settings = Settings()
