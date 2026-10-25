@@ -1,0 +1,31 @@
+/* Login page. Design tokens from frontend/src/styles/tokens.css. */
+
+.login {
+  max-width: 360px;
+  margin: var(--space-8) auto;
+  padding: 0 var(--space-6);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.login-title {
+  margin: 0 0 var(--space-2);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.login-submit {
+  margin-top: var(--space-2);
+}
+
+.login-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--sev-high);
+  text-align: center;
+}

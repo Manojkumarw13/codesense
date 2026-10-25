@@ -90,3 +90,24 @@ export interface Paginated<T> {
   limit: number;
   items: T[];
 }
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  roles: string[];
+  teams: string[];
+}
+
+export interface AuthTokens {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+}
+
+export interface LoginResponse extends AuthTokens {
+  user: AuthUser;
+}
+
+export interface RefreshResponse {
+  access_token: string;
+}

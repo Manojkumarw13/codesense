@@ -1,15 +1,26 @@
 import type {
   AiStatus,
   Anomaly,
+  AuthUser,
   Bottleneck,
   ExplainResponse,
   HealthScore,
   Insight,
+  LoginResponse,
   MlModel,
+  RefreshResponse,
 } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1';
 const SIM_BASE = import.meta.env.VITE_SIM_BASE_URL ?? 'http://localhost:8001';
+
+/** Bearer token stored in localStorage by AuthContext after login. */
+const TOKEN_KEY = 'codesense_token';
+
+function authHeaders(): HeadersInit {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export class ApiError extends Error {
   constructor(
@@ -48,7 +59,9 @@ async function get<T>(path: string, params: Record<string, string | undefined> =
     if ((k === 'team_id' || k === 'organization_id' || k === 'project_id') && !UUID_RE.test(v)) continue;
     qs.set(k, v);
   }
-  const res = await fetch(`${BASE_URL}${path}${qs.size ? `?${qs}` : ''}`);
+  const res = await fetch(`${BASE_URL}${path}${qs.size ? `?${qs}` : ''}`, {
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new ApiError(res.status, `${res.status} ${path}`);
   const body = await res.json();
   return (body && Array.isArray(body.items) ? body.items : body) as T;
@@ -57,7 +70,7 @@ async function get<T>(path: string, params: Record<string, string | undefined> =
 async function post<T>(path: string, payload: unknown): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(payload),
   });
   return unwrap<T>(res, path);
@@ -102,6 +115,11 @@ export const apiClient = {
     post('/ai/explain', payload),
   listEvents: (params: QueryParams = {}): Promise<Record<string, unknown>[]> =>
     get('/events', params),
+  login: (email: string, password: string): Promise<LoginResponse> =>
+    post('/auth/login', { email, password }),
+  refresh: (refreshToken: string): Promise<RefreshResponse> =>
+    post('/auth/refresh', { refresh_token: refreshToken }),
+  me: (): Promise<AuthUser> => get('/auth/me'),
 };
 
 export const simulatorClient = {

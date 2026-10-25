@@ -1,12 +1,14 @@
 import { Suspense, lazy } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import PublicLayout from './components/layout/PublicLayout';
+import RequireAuth from './components/layout/RequireAuth';
 import Loading from './components/ui/Loading';
 
 const DocsEntry = lazy(() => import('./pages/DocsEntry'));
 const Landing = lazy(() => import('./pages/Landing'));
 const Product = lazy(() => import('./pages/Product'));
+const Login = lazy(() => import('./pages/Login'));
 const Overview = lazy(() => import('./pages/Overview'));
 const Health = lazy(() => import('./pages/Health'));
 const Trends = lazy(() => import('./pages/Trends'));
@@ -27,6 +29,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 export default function App() {
+  const navigate = useNavigate();
   return (
     <Suspense fallback={<Loading />}>
       <Routes>
@@ -34,8 +37,12 @@ export default function App() {
           <Route index element={<Landing />} />
           <Route path="product" element={<Product />} />
           <Route path="docs" element={<DocsEntry />} />
+          <Route
+            path="login"
+            element={<Login onLogin={() => navigate('/app', { replace: true })} />}
+          />
         </Route>
-        <Route path="app" element={<Layout />}>
+        <Route path="app" element={<RequireAuth><Layout /></RequireAuth>}>
           <Route index element={<Overview />} />
           <Route path="health" element={<Health />} />
           <Route path="delivery" element={<Delivery />} />
