@@ -7,15 +7,18 @@ Needs a live Postgres (same precondition as test_database.py):
 Two marker health scores share one calculated_at; limit=1 and limit=100 must
 agree on the first row, repeatedly.
 """
+
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from backend.app.api.endpoints import health_score as health_score_endpoint
+from backend.app.auth.auth import create_access_token, hash_password
 from backend.app.core.database import SessionLocal
 from backend.app.models.analytics import HealthScore
-from backend.app.models.core import Organization, Team
+from backend.app.models.core import Organization, Role, Team, TeamMember, User, UserRole
 
 STAMP = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
@@ -33,6 +36,25 @@ def test_health_score_order_stable_on_ties():
         team = Team(organization_id=org.id, name="Ordering Stability Team")
         db.add(team)
         db.flush()
+        role = db.query(Role).filter(Role.name == "DEVELOPER").first()
+        if role is None:
+            role = Role(id=uuid.uuid4(), name="DEVELOPER")
+            db.add(role)
+            db.flush()
+        user = User(
+            id=uuid.uuid4(),
+            organization_id=org.id,
+            email="ordering@x.io",
+            password_hash=hash_password("Password1!"),
+            status="ACTIVE",
+        )
+        db.add(user)
+        db.commit()
+        db.add(UserRole(user_id=user.id, role_id=role.id))
+        db.add(TeamMember(team_id=team.id, user_id=user.id))
+        db.commit()
+        token = create_access_token({"sub": str(user.id)})
+        headers = {"Authorization": f"Bearer {token}"}
         for score in (11.1, 22.2):
             row = HealthScore(
                 organization_id=org.id,
@@ -53,7 +75,9 @@ def test_health_score_order_stable_on_ties():
         for _ in range(3):
             for limit in (1, 100):
                 resp = client.get(
-                    "/health-score", params={"limit": limit, "team_id": team_id}
+                    "/health-score",
+                    params={"limit": limit, "team_id": team_id},
+                    headers=headers,
                 )
                 assert resp.status_code == 200, resp.text
                 items = resp.json()["items"]

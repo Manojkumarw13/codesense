@@ -14,6 +14,7 @@ from sqlalchemy import event
 from backend.app.core.database import SessionLocal, engine
 from backend.app.core.settings import settings
 from backend.app.main import app
+from backend.app.auth.auth import create_access_token, hash_password
 from backend.app.models.analytics import (
     Anomaly,
     Bottleneck,
@@ -21,7 +22,15 @@ from backend.app.models.analytics import (
     Insight,
     MetricDefinition,
 )
-from backend.app.models.core import CanonicalEvent, Organization, Team
+from backend.app.models.core import (
+    CanonicalEvent,
+    Organization,
+    Role,
+    Team,
+    TeamMember,
+    User,
+    UserRole,
+)
 from backend.app.models.raw import ProviderEvent
 
 client = TestClient(app)
@@ -153,6 +162,32 @@ def _seed_detections(db, organization_id, team_id) -> dict[str, uuid.UUID]:
     }
 
 
+def _seed_authenticated_member(
+    db, organization_id: uuid.UUID, team_id: uuid.UUID, role_name: str = "DEVELOPER"
+) -> str:
+    """Seed an active team member with ``role_name`` and return a bearer token.
+
+    Used by Phase 20 privacy tests whose callers must now satisfy the
+    authentication + team guards on the analytics read endpoints. The test's
+    own assertions (masking / scoping) are unchanged; only the session gains a
+    valid credential.
+    """
+    role = Role(id=uuid.uuid4(), name=role_name)
+    user = User(
+        id=uuid.uuid4(),
+        organization_id=organization_id,
+        email=f"member-{uuid.uuid4().hex[:8]}@x.io",
+        password_hash=hash_password("Password1!"),
+        status="ACTIVE",
+    )
+    db.add_all([role, user])
+    db.commit()
+    db.add(UserRole(user_id=user.id, role_id=role.id))
+    db.add(TeamMember(team_id=team_id, user_id=user.id))
+    db.commit()
+    return create_access_token({"sub": str(user.id)})
+
+
 def _cleanup(db, organization_id, team_id, raw_ids, metric_id=None) -> None:
     """Delete every row seeded for one test."""
     db.query(HealthScore).filter(HealthScore.team_id == team_id).delete(
@@ -212,6 +247,7 @@ def seeded_small_team():
         db.commit()
         score_id = score.id
         stored_component_metrics = dict(score.component_metrics)
+        access_token = _seed_authenticated_member(db, organization_id, team_id)
     finally:
         db.close()
     yield {
@@ -219,6 +255,7 @@ def seeded_small_team():
         "organization_id": organization_id,
         "score_id": score_id,
         "component_metrics": stored_component_metrics,
+        "access_token": access_token,
     }
     db = SessionLocal()
     try:
@@ -256,9 +293,14 @@ def seeded_large_org():
         db.add(insight)
         db.commit()
         insight_id = insight.id
+        access_token = _seed_authenticated_member(db, organization_id, team_id)
     finally:
         db.close()
-    yield {"organization_id": organization_id, "insight_id": insight_id}
+    yield {
+        "organization_id": organization_id,
+        "insight_id": insight_id,
+        "access_token": access_token,
+    }
     db = SessionLocal()
     try:
         _cleanup(db, organization_id, team_id, raw_ids)
@@ -318,9 +360,10 @@ def seeded_team_with_one_active_contributor():
         db.add(score)
         db.commit()
         score_id = score.id
+        access_token = _seed_authenticated_member(db, organization_id, team_id)
     finally:
         db.close()
-    yield {"team_id": team_id, "score_id": score_id}
+    yield {"team_id": team_id, "score_id": score_id, "access_token": access_token}
     db = SessionLocal()
     try:
         _cleanup(db, organization_id, team_id, raw_ids)
@@ -349,9 +392,15 @@ def seeded_team_with_one_recent_contributor():
         events.append(("recent@x.io", now - timedelta(hours=1)))
         organization_id, team_id, raw_ids = _seed_team(db, events)
         ids = _seed_detections(db, organization_id, team_id)
+        access_token = _seed_authenticated_member(db, organization_id, team_id)
     finally:
         db.close()
-    yield {"team_id": team_id, "organization_id": organization_id, **ids}
+    yield {
+        "team_id": team_id,
+        "organization_id": organization_id,
+        **ids,
+        "access_token": access_token,
+    }
     db = SessionLocal()
     try:
         _cleanup(
@@ -382,7 +431,9 @@ def counted_queries():
 
 def test_health_score_masks_metric_evidence_for_small_team(seeded_small_team):
     resp = client.get(
-        "/api/v1/health-score", params={"team_id": str(seeded_small_team["team_id"])}
+        "/api/v1/health-score",
+        params={"team_id": str(seeded_small_team["team_id"])},
+        headers={"Authorization": f"Bearer {seeded_small_team['access_token']}"},
     )
     assert resp.status_code == 200
     item = resp.json()["items"][0]
@@ -393,7 +444,10 @@ def test_health_score_masks_metric_evidence_for_small_team(seeded_small_team):
     assert item["privacy"]["suppressed"] is True
     assert item["privacy"]["reason"] == "small_team_aggregation_threshold"
 
-    detail = client.get(f"/api/v1/health-score/{seeded_small_team['score_id']}")
+    detail = client.get(
+        f"/api/v1/health-score/{seeded_small_team['score_id']}",
+        headers={"Authorization": f"Bearer {seeded_small_team['access_token']}"},
+    )
     assert detail.status_code == 200
     detail_item = detail.json()
     assert detail_item["score"] == 88.0
@@ -408,7 +462,9 @@ def test_health_score_masks_metric_evidence_for_small_team(seeded_small_team):
 
 def test_masking_does_not_mutate_stored_row(seeded_small_team):
     client.get(
-        "/api/v1/health-score", params={"team_id": str(seeded_small_team["team_id"])}
+        "/api/v1/health-score",
+        params={"team_id": str(seeded_small_team["team_id"])},
+        headers={"Authorization": f"Bearer {seeded_small_team['access_token']}"},
     )
     db = SessionLocal()
     try:
@@ -505,8 +561,13 @@ def test_detections_mask_evidence_for_small_team(seeded_small_team, seeded_detec
         ("/api/v1/bottlenecks", "/api/v1/bottlenecks/{id}", "bottleneck"),
     ]
     params = {"team_id": str(seeded_small_team["team_id"])}
+    headers = {"Authorization": f"Bearer {seeded_small_team['access_token']}"}
     for list_path, detail_path, key in cases:
-        resp = client.get(list_path, params=params)
+        resp = client.get(
+            list_path,
+            params=params,
+            headers=headers,
+        )
         assert resp.status_code == 200, list_path
         item = next(i for i in resp.json()["items"] if i["id"] == str(ids[key]))
         assert item["evidence"]["deployment_frequency"]["value"] is None, list_path
@@ -517,7 +578,10 @@ def test_detections_mask_evidence_for_small_team(seeded_small_team, seeded_detec
             list_path
         )
 
-        detail = client.get(detail_path.format(id=ids[key]))
+        detail = client.get(
+            detail_path.format(id=ids[key]),
+            headers=headers,
+        )
         assert detail.status_code == 200, detail_path
         detail_item = detail.json()
         assert detail_item["evidence"]["deployment_frequency"]["value"] is None, (
@@ -532,8 +596,9 @@ def test_detection_responses_keep_dashboard_fields(
     """The shipped dashboard reads source_metrics and metric_id - keep them."""
     ids = seeded_detections
     params = {"team_id": str(seeded_small_team["team_id"])}
+    headers = {"Authorization": f"Bearer {seeded_small_team['access_token']}"}
 
-    resp = client.get("/api/v1/insights", params=params)
+    resp = client.get("/api/v1/insights", params=params, headers=headers)
     assert resp.status_code == 200
     insight = next(i for i in resp.json()["items"] if i["id"] == str(ids["insight"]))
     assert "source_metrics" in insight
@@ -541,7 +606,7 @@ def test_detection_responses_keep_dashboard_fields(
     for key in ("id", "severity", "confidence", "evidence", "privacy"):
         assert key in insight, key
 
-    resp = client.get("/api/v1/anomalies", params=params)
+    resp = client.get("/api/v1/anomalies", params=params, headers=headers)
     assert resp.status_code == 200
     anomaly = next(i for i in resp.json()["items"] if i["id"] == str(ids["anomaly"]))
     assert "metric_id" in anomaly
@@ -564,6 +629,9 @@ def test_health_score_masks_when_only_one_contributor_in_period(
     resp = client.get(
         "/api/v1/health-score",
         params={"team_id": str(seeded_team_with_one_active_contributor["team_id"])},
+        headers={
+            "Authorization": f"Bearer {seeded_team_with_one_active_contributor['access_token']}"
+        },
     )
     assert resp.status_code == 200
     item = resp.json()["items"][0]
@@ -584,13 +652,14 @@ def test_detections_mask_when_only_one_contributor_in_window(
     """
     seeded = seeded_team_with_one_recent_contributor
     params = {"team_id": str(seeded["team_id"])}
+    headers = {"Authorization": f"Bearer {seeded['access_token']}"}
     cases = [
         ("/api/v1/insights", "insight"),
         ("/api/v1/anomalies", "anomaly"),
         ("/api/v1/bottlenecks", "bottleneck"),
     ]
     for path, key in cases:
-        resp = client.get(path, params=params)
+        resp = client.get(path, params=params, headers=headers)
         assert resp.status_code == 200, path
         item = next(i for i in resp.json()["items"] if i["id"] == str(seeded[key]))
         assert item["evidence"]["deployment_frequency"]["value"] is None, path
@@ -632,7 +701,9 @@ def test_contributor_count_is_queried_once_per_scope(
 
     counted_queries.clear()
     resp = client.get(
-        "/api/v1/insights", params={"team_id": str(seeded_small_team["team_id"])}
+        "/api/v1/insights",
+        params={"team_id": str(seeded_small_team["team_id"])},
+        headers={"Authorization": f"Bearer {seeded_small_team['access_token']}"},
     )
     assert resp.status_code == 200
     count_queries = [s for s in counted_queries if "canonical_events" in s]
@@ -642,7 +713,9 @@ def test_contributor_count_is_queried_once_per_scope(
     # history); they still cost a single statement.
     counted_queries.clear()
     resp = client.get(
-        "/api/v1/health-score", params={"team_id": str(seeded_small_team["team_id"])}
+        "/api/v1/health-score",
+        params={"team_id": str(seeded_small_team["team_id"])},
+        headers={"Authorization": f"Bearer {seeded_small_team['access_token']}"},
     )
     assert resp.status_code == 200
     count_queries = [s for s in counted_queries if "canonical_events" in s]
@@ -654,6 +727,7 @@ def test_org_level_insight_is_scoped_by_organization(seeded_large_org):
     resp = client.get(
         "/api/v1/insights",
         params={"organization_id": str(seeded_large_org["organization_id"])},
+        headers={"Authorization": f"Bearer {seeded_large_org['access_token']}"},
     )
     assert resp.status_code == 200
     item = next(
