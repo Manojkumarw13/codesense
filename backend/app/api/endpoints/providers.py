@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.app.api.endpoints.events import ingest_events_batch
@@ -42,8 +42,6 @@ router = APIRouter()
 
 
 class ProviderItem(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: str
     name: str
     provider_type: str
@@ -99,7 +97,18 @@ def _connector_row(connector: ConnectorConfig) -> dict[str, Any]:
 
 @router.post("/connectors")
 def create_connector(connector_in: ConnectorCreate, db: Session = Depends(get_db)):  # noqa: B008
-    """Create (or reuse) a Provider and its ConnectorConfig for an organization."""
+    """Create (or reuse) a Provider and its ConnectorConfig for an organization.
+
+    Unknown providers are rejected with HTTP 400. Re-creating the same
+    (provider, organization) pair returns the existing connector (dedup) instead
+    of inserting a duplicate row.
+    """
+    if registry.get(connector_in.provider) is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Provider {connector_in.provider} not registered",
+        )
+
     provider = db.query(Provider).filter(Provider.name == connector_in.provider).first()
     if provider is None:
         provider = Provider(
@@ -121,6 +130,17 @@ def create_connector(connector_in: ConnectorCreate, db: Session = Depends(get_db
             status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found"
         )
 
+    existing = (
+        db.query(ConnectorConfig)
+        .filter(
+            ConnectorConfig.provider_id == provider.id,
+            ConnectorConfig.organization_id == connector_in.organization_id,
+        )
+        .first()
+    )
+    if existing is not None:
+        return _connector_row(existing)
+
     row = ConnectorConfig(
         provider_id=provider.id,
         organization_id=connector_in.organization_id,
@@ -133,9 +153,18 @@ def create_connector(connector_in: ConnectorCreate, db: Session = Depends(get_db
 
 
 @router.get("/connectors")
-def list_connectors(db: Session = Depends(get_db)) -> list[dict[str, Any]]:  # noqa: B008
-    """List all connector configs with their sync state."""
-    rows = db.query(ConnectorConfig).all()
+def list_connectors(
+    organization_id: uuid.UUID | None = None,
+    db: Session = Depends(get_db),  # noqa: B008
+) -> list[dict[str, Any]]:
+    """List all connector configs with their sync state.
+
+    Optionally filter by ``organization_id``.
+    """
+    query = db.query(ConnectorConfig)
+    if organization_id is not None:
+        query = query.filter(ConnectorConfig.organization_id == organization_id)
+    rows = query.all()
     return [_connector_row(r) for r in rows]
 
 
@@ -176,7 +205,7 @@ def sync_connector(connector_id: uuid.UUID, db: Session = Depends(get_db)):  # n
     ingested = 0
 
     try:
-        events, next_cursor, _has_more = connector.fetch_events(since=cursor)
+        events, next_cursor, _ = connector.fetch_events(since=cursor)
         raw_events = connector.map_to_raw_events(payloads=events)
         ingest_list = [ProviderEventCreate(**raw) for raw in raw_events]
         result = ingest_events_batch(ingest_list, db)
@@ -263,7 +292,10 @@ async def receive_webhook(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload"
         )
 
-    raw_events = connector.webhook_to_raw_events(payload)
-    ingest_list = [ProviderEventCreate(**raw) for raw in raw_events]
-    result = ingest_events_batch(ingest_list, db)
-    return {"ingested": int(result.get("ingested_count", 0))}
+    try:
+        raw_events = connector.webhook_to_raw_events(payload)
+        ingest_list = [ProviderEventCreate(**raw) for raw in raw_events]
+        result = ingest_events_batch(ingest_list, db)
+        return {"ingested": int(result.get("ingested_count", 0))}
+    except Exception as exc:  # noqa: BLE001  (ingestion error -> report, not 500)
+        return {"ingested": 0, "error": str(exc)}

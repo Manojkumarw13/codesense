@@ -293,3 +293,87 @@ def test_webhook_success_ingests_events(mock_get, db):
     )
     assert resp.status_code == 200, resp.text
     assert resp.json() == {"ingested": 1}
+
+
+# ---------------------------------------------------------------------------
+# Fix round 1: dedup, org filter, unknown provider, webhook error handling
+# ---------------------------------------------------------------------------
+
+
+def test_connector_create_dedup_same_provider_org(db):
+    """Re-creating the same (provider, organization) returns the same row."""
+    org = create_org(db)
+    payload = {
+        "provider": "github",
+        "organization_id": str(org.id),
+        "config": {"token": "tok", "owner": "o", "repo": "r"},
+    }
+    resp1 = client.post("/api/v1/connectors", json=payload)
+    assert resp1.status_code == 200, resp1.text
+    first_id = resp1.json()["id"]
+
+    resp2 = client.post("/api/v1/connectors", json=payload)
+    assert resp2.status_code == 200, resp2.text
+    assert resp2.json()["id"] == first_id
+
+    # No duplicate rows in the DB
+    rows = db.query(ConnectorConfig).all()
+    assert len(rows) == 1
+    assert str(rows[0].id) == first_id
+
+
+def test_connector_create_unknown_provider_returns_400(db):
+    org = create_org(db)
+    payload = {
+        "provider": "no-such-provider",
+        "organization_id": str(org.id),
+        "config": {},
+    }
+    resp = client.post("/api/v1/connectors", json=payload)
+    assert resp.status_code == 400, resp.text
+
+
+def test_list_connectors_filters_by_organization(db):
+    org1 = create_org(db, name="Org One")
+    org2 = create_org(db, name="Org Two")
+    provider = create_provider(db, "github")
+
+    c1 = create_connector(db, provider, org1, config={"token": "a"})
+    create_connector(db, provider, org2, config={"token": "b"})
+
+    resp = client.get(f"/api/v1/connectors?organization_id={org1.id}")
+    assert resp.status_code == 200, resp.text
+    items = resp.json()
+    assert len(items) == 1
+    assert items[0]["id"] == str(c1.id)
+
+
+class _FailingWebhookConnector:
+    def __init__(self, connector_id, org_id, config):
+        self.config = dict(config or {})
+
+    def verify_webhook_signature(self, payload, signature=None):
+        return True
+
+    def webhook_to_raw_events(self, payload):
+        raise RuntimeError("webhook mapping failed")
+
+
+@patch("backend.app.api.endpoints.providers.registry.get")
+def test_webhook_ingestion_error_returns_structured_not_500(mock_get, db):
+    org = create_org(db)
+    provider = create_provider(db, "github")
+    create_connector(db, provider, org, config={"webhook_secret": "secret"})
+
+    mock_get.return_value = _FailingWebhookConnector
+
+    resp = client.post(
+        "/api/v1/webhooks/github",
+        json={"event": "push", "id": 1},
+        headers={"X-Hub-Signature-256": "sha256=good"},
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["ingested"] == 0
+    assert "error" in body
+    assert "webhook mapping failed" in body["error"]
