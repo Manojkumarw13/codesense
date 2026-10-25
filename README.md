@@ -17,5 +17,30 @@ CodeSense is an ML-powered engineering intelligence platform that preserves priv
 - `docker/`: Docker Compose configurations.
 - `docs/`: Technical specifications and requirements.
 
+## Quick Start (Docker)
+
+```bash
+cp .env.example .env          # edit SECRET_KEY before production
+docker compose up -d --build  # backend, postgres, redis, worker, nginx, prometheus, dashboard
+curl http://localhost/health  # nginx self-check -> "ok"
+curl http://localhost/api/v1/health
+```
+
+## Operations
+
+- `docker compose logs -f backend` — view backend logs
+- `docker compose down` — stop (volumes preserved); `docker compose down -v` — wipe data
+- `alembic upgrade head` — apply database migrations
+- `scripts/db_backup.sh` / `scripts/db_restore.sh <file>` — backup / restore Postgres
+
+## Documentation
+
+| Doc | File |
+|---|---|
+| Deployment | `docs/CodeSense — Deployment.md` |
+| Observability | `docs/CodeSense — Observability.md` |
+| Security Hardening | `docs/CodeSense — Security Hardening.md` |
+| Troubleshooting | `docs/CodeSense — Troubleshooting.md` |
+
 ## Getting Started
 To be updated during implementation.
