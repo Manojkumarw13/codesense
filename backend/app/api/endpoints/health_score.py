@@ -3,11 +3,14 @@
 import uuid
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from backend.app.auth.auth import AuthError, get_current_user
-from backend.app.auth.dependencies import require_role, require_team_access
+from backend.app.api.auth_deps import (
+    REQUIRED_ROLES,
+    require_auth,
+    require_team_access_if,
+)
 from backend.app.core.database import get_db
 from backend.app.models.analytics import HealthScore
 from backend.app.models.core import User
@@ -20,52 +23,6 @@ from backend.app.privacy.policy import (
 )
 
 router = APIRouter()
-
-REQUIRED_ROLES = [
-    "ADMIN",
-    "ENGINEERING_LEADER",
-    "ENGINEERING_MANAGER",
-    "TECH_LEAD",
-    "ANALYST",
-    "DEVELOPER",
-]
-
-
-def _current_user(
-    authorization: str | None = Header(default=None),
-    db: Session = Depends(get_db),  # noqa: B008
-) -> User:
-    """Resolve ``Authorization: Bearer <token>`` to the current active user.
-
-    Returns 401 when the header is missing or the token is invalid.
-    Mirrors the auth router's ``_current_user`` so the analytics endpoints
-    stay self-contained (``auth.py`` / ``dependencies.py`` are read-only here).
-    """
-    if authorization is None or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
-        )
-    token = authorization[len("Bearer ") :].strip()
-    try:
-        return get_current_user(db, token)
-    except AuthError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
-
-
-def _require_role(current_user: User, db: Session) -> None:
-    """403 unless ``current_user`` holds one of ``REQUIRED_ROLES``."""
-    try:
-        require_role(REQUIRED_ROLES)(current_user, db)
-    except AuthError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
-
-
-def _require_team_access(current_user: User, db: Session, team_id: uuid.UUID) -> None:
-    """403 unless ``current_user`` is a member of ``team_id``."""
-    try:
-        require_team_access([team_id])(current_user, db)
-    except AuthError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
 
 
 def _scope_base(row: HealthScore) -> tuple[uuid.UUID | None, uuid.UUID | None]:
@@ -162,13 +119,11 @@ def list_health_scores(
     project_id: Optional[uuid.UUID] = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    current_user: User = Depends(_current_user),
+    current_user: User = Depends(require_auth(REQUIRED_ROLES)),
     db: Session = Depends(get_db),
 ):
     """Get engineering health scores (supports filtering by org/team/project)."""
-    _require_role(current_user, db)
-    if team_id is not None:
-        _require_team_access(current_user, db, team_id)
+    require_team_access_if(current_user, db, team_id)
     q = db.query(HealthScore)
     if organization_id:
         q = q.filter(HealthScore.organization_id == organization_id)
