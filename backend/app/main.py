@@ -17,6 +17,7 @@ from backend.app.api.endpoints import (
 from backend.app.api.endpoints import health_score as health_score_endpoint
 from backend.app.api.endpoints import metrics as metrics_endpoint
 from backend.app.api.endpoints import ml as ml_endpoint
+from backend.app.auth.router import router as auth_router
 from backend.app.core.database import SessionLocal
 from backend.app.core.exceptions import register_exception_handlers
 from backend.app.core.logging import setup_logging
@@ -73,6 +74,7 @@ app.include_router(
 )
 app.include_router(ml_endpoint.router, prefix=settings.API_V1_STR, tags=["ml"])
 app.include_router(ai_endpoint.router, prefix=settings.API_V1_STR, tags=["ai"])
+app.include_router(auth_router, prefix=settings.API_V1_STR, tags=["auth"])
 
 
 @app.get("/")
