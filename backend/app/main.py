@@ -21,7 +21,11 @@ from backend.app.auth.router import router as auth_router
 from backend.app.core.database import SessionLocal
 from backend.app.core.exceptions import register_exception_handlers
 from backend.app.core.logging import setup_logging
-from backend.app.core.middleware import RequestIDMiddleware
+from backend.app.core.middleware import (
+    RateLimitMiddleware,
+    RequestIDMiddleware,
+    SecurityHeadersMiddleware,
+)
 from backend.app.core.observability import (
     PrometheusMiddleware,
     metrics_response,
@@ -49,6 +53,12 @@ if settings.ENABLE_METRICS:
 
 # Request ID Tracking
 app.add_middleware(RequestIDMiddleware)
+
+# Rate limiting (token bucket) on all endpoints
+app.add_middleware(RateLimitMiddleware)
+
+# Security headers on every response
+app.add_middleware(SecurityHeadersMiddleware)
 
 # CORS
 app.add_middleware(
