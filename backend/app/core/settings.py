@@ -1,4 +1,3 @@
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,7 +6,7 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = "supersecretkeyreplaceinproduction"
-    
+
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
@@ -19,7 +18,7 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str | None = None
     LLM_MODEL: str | None = "google/antigravity-gemini-3.5-flash"
     AI_GATEWAY_URL: str | None = None
-    
+
     # ML Settings
     ML_MODELS_PATH: str = "ml_models"
     FEATURE_STORE_ENABLED: bool = True
@@ -62,6 +61,12 @@ class Settings(BaseSettings):
     OFFLINE_PROBE_TIMEOUT_SECONDS: float = 2.0
     OFFLINE_PROBE_INTERVAL_SECONDS: int = 30
 
+    # Auth (Phase 22)
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ALGORITHM: str = "HS256"
+    BCRYPT_ROUNDS: int = 12
+
     @property
     def REDIS_URI(self) -> str:
         if self.REDIS_URL:
@@ -93,5 +98,6 @@ class Settings(BaseSettings):
         if self.DATABASE_URL:
             return self.DATABASE_URL
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+
 
 settings = Settings()
