@@ -22,7 +22,11 @@ from backend.app.core.database import SessionLocal
 from backend.app.core.exceptions import register_exception_handlers
 from backend.app.core.logging import setup_logging
 from backend.app.core.middleware import RequestIDMiddleware
-from backend.app.core.observability import PrometheusMiddleware, setup_tracing
+from backend.app.core.observability import (
+    PrometheusMiddleware,
+    metrics_response,
+    setup_tracing,
+)
 from backend.app.core.redis import get_redis_client
 from backend.app.core.settings import settings
 from backend.app.services.processing import EventProcessor
@@ -80,6 +84,12 @@ app.include_router(auth_router, prefix=settings.API_V1_STR, tags=["auth"])
 @app.get("/")
 def read_root():
     return {"message": f"Welcome to {settings.APP_NAME} API"}
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics():
+    """Root-level Prometheus metrics endpoint (scrape target)."""
+    return metrics_response()
 
 
 # Background Processing Job — uses asyncio; Celery replaces this when broker available

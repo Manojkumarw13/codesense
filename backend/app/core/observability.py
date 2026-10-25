@@ -5,6 +5,7 @@ Provides:
 - OpenTelemetry tracing setup (optional, no-op if unavailable)
 - Helpers for API / ingestion / worker observability
 """
+
 import logging
 import time
 
@@ -34,6 +35,22 @@ try:
         "codesense_ingestion_events_total",
         "Ingestion events by status",
         ["status"],
+    )
+    INGESTION_RECEIVED = Counter(
+        "codesense_ingestion_received_total",
+        "Ingestion events received",
+    )
+    INGESTION_PROCESSED = Counter(
+        "codesense_ingestion_processed_total",
+        "Ingestion events processed",
+    )
+    INGESTION_FAILED = Counter(
+        "codesense_ingestion_failed_total",
+        "Ingestion events failed",
+    )
+    INGESTION_DUPES = Counter(
+        "codesense_ingestion_dupes_total",
+        "Ingestion duplicate events",
     )
     DB_QUERY_DURATION = Histogram(
         "codesense_db_query_duration_seconds",
@@ -65,6 +82,10 @@ except Exception as exc:  # noqa: BLE001
     REQUEST_COUNT = None  # type: ignore
     REQUEST_LATENCY = None  # type: ignore
     INGESTION_COUNTER = None  # type: ignore
+    INGESTION_RECEIVED = None  # type: ignore
+    INGESTION_PROCESSED = None  # type: ignore
+    INGESTION_FAILED = None  # type: ignore
+    INGESTION_DUPES = None  # type: ignore
     DB_QUERY_DURATION = None  # type: ignore
     WORKER_JOBS_PROCESSED = None  # type: ignore
     WORKER_DURATION = None  # type: ignore
@@ -110,7 +131,9 @@ def setup_tracing(service_name: str = "codesense-api"):
                     BatchSpanProcessor,  # type: ignore
                 )
 
-                otlp_exporter = OTLPSpanExporter(endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT)
+                otlp_exporter = OTLPSpanExporter(
+                    endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT
+                )
                 provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
                 logger.info(f"OTLP exporter -> {settings.OTEL_EXPORTER_OTLP_ENDPOINT}")
             except Exception as e:  # noqa: BLE001
@@ -159,7 +182,9 @@ class PrometheusMiddleware:
             duration = time.perf_counter() - start
             try:
                 if REQUEST_COUNT:
-                    REQUEST_COUNT.labels(method=method, path=path, status=status_code).inc()
+                    REQUEST_COUNT.labels(
+                        method=method, path=path, status=status_code
+                    ).inc()
                 if REQUEST_LATENCY:
                     REQUEST_LATENCY.labels(method=method, path=path).observe(duration)
             except Exception:
