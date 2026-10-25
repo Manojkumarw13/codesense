@@ -30,8 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Hydrate the stored token on mount so a page refresh stays authenticated.
+  // localStorage can throw in restricted contexts (e.g. Safari private mode);
+  // fall back to null and only clear loading once hydration completes.
   useEffect(() => {
-    setToken(localStorage.getItem(TOKEN_KEY));
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(TOKEN_KEY);
+    } catch {
+      stored = null;
+    }
+    setToken(stored);
     setLoading(false);
   }, []);
 
