@@ -82,6 +82,7 @@ SCENARIO_DELTAS = {
 SCENARIO_EXPECTATIONS = {
     "NORMAL": {
         "forbidden_bottlenecks": {"REVIEW", "CI", "DEPLOYMENT", "WORKFLOW"},
+        "max_anomalies": 0,
     },
     "REVIEW_BOTTLENECK": {
         "required_bottlenecks": {"REVIEW"},
@@ -275,6 +276,10 @@ def test_scenario_produces_expected_detection(scenario):
         if "min_anomalies" in expectations:
             assert len(anomalies) >= expectations["min_anomalies"], (
                 f"{scenario}: expected >= {expectations['min_anomalies']} anomalies, got {len(anomalies)}"
+            )
+        if "max_anomalies" in expectations:
+            assert len(anomalies) <= expectations["max_anomalies"], (
+                f"{scenario}: expected <= {expectations['max_anomalies']} anomalies, got {len(anomalies)}"
             )
         if "forbidden_bottlenecks" in expectations:
             present = bottleneck_categories & expectations["forbidden_bottlenecks"]
