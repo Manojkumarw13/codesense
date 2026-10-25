@@ -58,7 +58,6 @@ def test_cicd_auth_headers_missing_token():
     conn = _connector(extra_config={"token": ""})
     headers = conn.auth_headers()
     assert headers == {
-        "Authorization": "Bearer ",
         "Accept": "application/json",
     }
 
@@ -94,6 +93,24 @@ def test_cicd_fetch_events_paginates_and_filters_since(mock_request):
     assert "builds" in args[1] or "events" in args[1]
     assert kwargs["params"]["limit"] == 100
     assert kwargs["headers"]["Authorization"] == "Bearer cicd_token_test"
+    # F1: since should be passed as query parameter
+    assert "since" in kwargs["params"]
+    assert kwargs["params"]["since"] == "2026-01-01T00:00:00+0000"
+
+
+@patch("requests.Session.request")
+def test_cicd_fetch_events_passes_since_as_query_param(mock_request):
+    """F1: Verify `since` is passed as query parameter to the API."""
+    response = _make_response(json_data=[], headers={})
+    mock_request.return_value = response
+
+    conn = _connector()
+    conn.fetch_events(since="2026-03-15T12:30:00Z")
+
+    _, kwargs = mock_request.call_args
+    assert "since" in kwargs["params"]
+    # ISO8601 with timezone offset
+    assert kwargs["params"]["since"] == "2026-03-15T12:30:00+0000"
 
 
 @patch("requests.Session.request")

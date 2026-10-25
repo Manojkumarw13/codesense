@@ -41,10 +41,6 @@ class CICDError(Exception):
     """Raised when the CI/CD API returns a non-2xx response."""
 
 
-class CICDConfigurationError(ValueError):
-    """Raised when the CI/CD connector is misconfigured."""
-
-
 class CICDConnector(BaseProviderConnector):
     """Generic CI/CD REST API connector.
 
@@ -68,12 +64,15 @@ class CICDConnector(BaseProviderConnector):
     # --- auth ---
 
     def auth_headers(self) -> dict[str, str]:
-        """HTTP headers for authenticated CI/CD API calls."""
+        """HTTP headers for authenticated CI/CD API calls.
+
+        Omits Authorization header when no token is configured.
+        """
         token = self.config.get("token", "")
-        return {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/json",
-        }
+        headers = {"Accept": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        return headers
 
     # --- fetch ---
 
@@ -90,6 +89,10 @@ class CICDConnector(BaseProviderConnector):
 
         If ``base_url`` is not configured, returns ``([], None, False)``
         to indicate webhook-only mode.
+
+        Passes ``since`` as an ISO8601 query parameter to the API for
+        server-side filtering (falling back to client-side filtering via
+        ``_filter_by_since``).
         """
         base_url = self.config.get("base_url", "")
         if not base_url:
@@ -100,6 +103,8 @@ class CICDConnector(BaseProviderConnector):
         params: dict[str, Any] = {"limit": self.PER_PAGE}
         if cursor:
             params["cursor"] = cursor
+        if since:
+            params["since"] = self._format_since_for_query(since)
 
         resp = self._session.get(
             url,
@@ -149,10 +154,9 @@ class CICDConnector(BaseProviderConnector):
     def webhook_to_raw_events(self, payload: dict[str, Any]) -> list[dict[str, Any]]:
         """Map an inbound CI/CD webhook payload to raw events.
 
-        The caller is expected to merge the event type into the payload
-        under the ``"event"`` key so the event type can be resolved.
-        The ``"type"`` and ``"status"`` fields should already be present
-        in the payload for proper resolution.
+        The caller is expected to ensure the payload contains ``"type"``
+        (or ``"event_type"``) and ``"status"`` fields so the event type
+        can be resolved by ``_resolve_event_types``.
         """
         merged = dict(payload)
         # Don't overwrite "type" if already present; "event" is just metadata
@@ -227,6 +231,25 @@ class CICDConnector(BaseProviderConnector):
         return hmac.compare_digest(expected, signature)
 
     # --- helpers ---
+
+    @staticmethod
+    def _format_since_for_query(since: datetime | str | None) -> str | None:
+        """Format ``since`` as an ISO8601 string for query parameters.
+
+        ``BaseProviderConnector.fetch_events`` types ``since`` as
+        ``datetime | None``, but the API expects an ISO-8601 string.
+        A ``datetime`` is formatted with an explicit UTC offset; an
+        already-string ``since`` is normalized (e.g., "Z" -> "+0000")
+        so callers (and tests) can supply raw ISO8601 strings.
+        """
+        if since is None:
+            return None
+        if isinstance(since, datetime):
+            return since.strftime("%Y-%m-%dT%H:%M:%S%z")
+        text = str(since).strip()
+        if text.endswith("Z"):
+            text = text[:-1] + "+0000"
+        return text
 
     @staticmethod
     def _parse_timestamp(value: Any) -> datetime | None:
