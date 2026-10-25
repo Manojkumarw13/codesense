@@ -5,7 +5,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.endpoints import ai as ai_endpoint
-from backend.app.api.endpoints import anomalies, bottlenecks, events, health, insights, risk
+from backend.app.api.endpoints import (
+    anomalies,
+    bottlenecks,
+    events,
+    health,
+    insights,
+    providers,
+    risk,
+)
 from backend.app.api.endpoints import health_score as health_score_endpoint
 from backend.app.api.endpoints import metrics as metrics_endpoint
 from backend.app.api.endpoints import ml as ml_endpoint
@@ -27,8 +35,7 @@ if settings.ENABLE_TRACING:
     setup_tracing(service_name=settings.APP_NAME)
 
 app = FastAPI(
-    title=settings.APP_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    title=settings.APP_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
 # Prometheus middleware (Phase 2 observability) — must be outermost
@@ -53,18 +60,25 @@ register_exception_handlers(app)
 # Include routers
 app.include_router(health.router, prefix=settings.API_V1_STR, tags=["health"])
 app.include_router(events.router, prefix=settings.API_V1_STR, tags=["events"])
-app.include_router(metrics_endpoint.router, prefix=settings.API_V1_STR, tags=["observability"])
+app.include_router(providers.router, prefix=settings.API_V1_STR, tags=["providers"])
+app.include_router(
+    metrics_endpoint.router, prefix=settings.API_V1_STR, tags=["observability"]
+)
 app.include_router(risk.router, prefix=settings.API_V1_STR, tags=["risk"])
 app.include_router(anomalies.router, prefix=settings.API_V1_STR, tags=["anomalies"])
 app.include_router(bottlenecks.router, prefix=settings.API_V1_STR, tags=["bottlenecks"])
 app.include_router(insights.router, prefix=settings.API_V1_STR, tags=["insights"])
-app.include_router(health_score_endpoint.router, prefix=settings.API_V1_STR, tags=["health-score"])
+app.include_router(
+    health_score_endpoint.router, prefix=settings.API_V1_STR, tags=["health-score"]
+)
 app.include_router(ml_endpoint.router, prefix=settings.API_V1_STR, tags=["ml"])
 app.include_router(ai_endpoint.router, prefix=settings.API_V1_STR, tags=["ai"])
+
 
 @app.get("/")
 def read_root():
     return {"message": f"Welcome to {settings.APP_NAME} API"}
+
 
 # Background Processing Job — uses asyncio; Celery replaces this when broker available
 async def process_events_loop():
