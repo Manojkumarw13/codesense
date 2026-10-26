@@ -20,11 +20,12 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, cast
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.app.api.endpoints.events import ingest_events_batch
+from backend.app.auth.auth import AuthError, get_current_user
 from backend.app.core.database import get_db
 from backend.app.integrations import (  # noqa: F401  (self-register connectors)
     cicd,
@@ -35,10 +36,31 @@ from backend.app.integrations import (  # noqa: F401  (self-register connectors)
 from backend.app.integrations.base import BaseProviderConnector
 from backend.app.integrations.registry import registry
 from backend.app.models.configuration import ConnectorConfig, Provider
-from backend.app.models.core import Organization
+from backend.app.models.core import Organization, User
 from backend.app.schemas.event import ProviderEventCreate
 
 router = APIRouter()
+
+
+def get_current_user_dep(
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),  # noqa: B008
+) -> User:
+    """Resolve ``Authorization: Bearer <token>`` to the current active user.
+
+    Mirrors ``auth.router._current_user`` so all authenticated endpoints share
+    one resolution path (missing/invalid Bearer token -> HTTP 401).
+    """
+    if authorization is None or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+    token = authorization[len("Bearer ") :].strip()
+    try:
+        return get_current_user(db, token)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
 
 
 class ProviderItem(BaseModel):
@@ -96,7 +118,11 @@ def _connector_row(connector: ConnectorConfig) -> dict[str, Any]:
 
 
 @router.post("/connectors")
-def create_connector(connector_in: ConnectorCreate, db: Session = Depends(get_db)):  # noqa: B008
+def create_connector(
+    connector_in: ConnectorCreate,
+    current_user: User = Depends(get_current_user_dep),  # noqa: B008
+    db: Session = Depends(get_db),  # noqa: B008
+):
     """Create (or reuse) a Provider and its ConnectorConfig for an organization.
 
     Unknown providers are rejected with HTTP 400. Re-creating the same
@@ -155,6 +181,7 @@ def create_connector(connector_in: ConnectorCreate, db: Session = Depends(get_db
 @router.get("/connectors")
 def list_connectors(
     organization_id: uuid.UUID | None = None,
+    current_user: User = Depends(get_current_user_dep),  # noqa: B008
     db: Session = Depends(get_db),  # noqa: B008
 ) -> list[dict[str, Any]]:
     """List all connector configs with their sync state.
@@ -169,7 +196,11 @@ def list_connectors(
 
 
 @router.post("/connectors/{connector_id}/sync")
-def sync_connector(connector_id: uuid.UUID, db: Session = Depends(get_db)):  # noqa: B008
+def sync_connector(
+    connector_id: uuid.UUID,
+    current_user: User = Depends(get_current_user_dep),  # noqa: B008
+    db: Session = Depends(get_db),  # noqa: B008
+):
     """Run one sync page against the provider and ingest resulting events.
 
     Provider errors are reported as ``status="failed"`` with HTTP 200 (a sync
@@ -229,7 +260,11 @@ def sync_connector(connector_id: uuid.UUID, db: Session = Depends(get_db)):  # n
 
 
 @router.get("/connectors/{connector_id}/sync-state")
-def get_sync_state(connector_id: uuid.UUID, db: Session = Depends(get_db)):  # noqa: B008
+def get_sync_state(
+    connector_id: uuid.UUID,
+    current_user: User = Depends(get_current_user_dep),  # noqa: B008
+    db: Session = Depends(get_db),  # noqa: B008
+):
     """Return the connector's sync state dict."""
     row = db.query(ConnectorConfig).filter(ConnectorConfig.id == connector_id).first()
     if row is None:

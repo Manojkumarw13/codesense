@@ -9,17 +9,20 @@ before it exists. Run with:
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 from unittest.mock import patch
 
+import bcrypt
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
+from backend.app.auth.auth import create_access_token
 from backend.app.core.database import SessionLocal
 from backend.app.main import app
 from backend.app.models.configuration import ConnectorConfig, Provider
-from backend.app.models.core import Organization
+from backend.app.models.core import Organization, User
 
 client = TestClient(app)
 
@@ -76,6 +79,25 @@ def create_connector(db, provider, org, config=None):
     return row
 
 
+def _auth_header(db) -> dict[str, str]:
+    """Seed an org + active user and return Bearer auth headers."""
+    user_id = uuid.uuid4()
+    org = Organization(name="Auth Org")
+    db.add(org)
+    db.flush()
+    user = User(
+        id=user_id,
+        organization_id=org.id,
+        email=f"connector-auth-{user_id}@example.com",
+        password_hash=bcrypt.hashpw(b"x", bcrypt.gensalt()).decode(),
+        status="ACTIVE",
+    )
+    db.add(user)
+    db.commit()
+    token = create_access_token({"sub": str(user_id)})
+    return {"Authorization": f"Bearer {token}"}
+
+
 # ---------------------------------------------------------------------------
 # Providers catalog
 # ---------------------------------------------------------------------------
@@ -102,7 +124,7 @@ def test_connector_create_and_list(db):
         "organization_id": str(org.id),
         "config": {"token": "tok", "webhook_secret": "sec", "owner": "o", "repo": "r"},
     }
-    resp = client.post("/api/v1/connectors", json=payload)
+    resp = client.post("/api/v1/connectors", json=payload, headers=_auth_header(db))
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["config"]["token"] == "tok"
@@ -112,7 +134,7 @@ def test_connector_create_and_list(db):
     provider = db.query(Provider).filter(Provider.name == "github").first()
     assert provider is not None
 
-    resp = client.get("/api/v1/connectors")
+    resp = client.get("/api/v1/connectors", headers=_auth_header(db))
     assert resp.status_code == 200, resp.text
     items = resp.json()
     assert len(items) >= 1
@@ -143,7 +165,9 @@ def test_connector_sync_returns_failed_state_on_provider_error(mock_get, db):
 
     mock_get.return_value = _FailingConnector
 
-    resp = client.post(f"/api/v1/connectors/{connector.id}/sync")
+    resp = client.post(
+        f"/api/v1/connectors/{connector.id}/sync", headers=_auth_header(db)
+    )
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["ingested"] == 0
@@ -186,7 +210,9 @@ def test_connector_sync_success_updates_sync_state(mock_get, db):
 
     mock_get.return_value = _OkConnector
 
-    resp = client.post(f"/api/v1/connectors/{connector.id}/sync")
+    resp = client.post(
+        f"/api/v1/connectors/{connector.id}/sync", headers=_auth_header(db)
+    )
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["ingested"] == 1
@@ -219,7 +245,9 @@ def test_connector_sync_state_get(db):
         },
     )
 
-    resp = client.get(f"/api/v1/connectors/{connector.id}/sync-state")
+    resp = client.get(
+        f"/api/v1/connectors/{connector.id}/sync-state", headers=_auth_header(db)
+    )
     assert resp.status_code == 200, resp.text
     assert resp.json() == {
         "cursor": "3",
@@ -227,6 +255,26 @@ def test_connector_sync_state_get(db):
         "status": "synced",
         "error": None,
     }
+
+
+# ---------------------------------------------------------------------------
+# Auth guard: unauthenticated calls to management endpoints must be rejected.
+
+
+def test_connector_create_requires_authentication(db):
+    org = create_org(db)
+    payload = {
+        "provider": "github",
+        "organization_id": str(org.id),
+        "config": {},
+    }
+    resp = client.post("/api/v1/connectors", json=payload)
+    assert resp.status_code == 401, resp.text
+
+
+def test_connectors_list_requires_authentication(db):
+    resp = client.get("/api/v1/connectors")
+    assert resp.status_code == 401, resp.text
 
 
 # ---------------------------------------------------------------------------
@@ -308,11 +356,11 @@ def test_connector_create_dedup_same_provider_org(db):
         "organization_id": str(org.id),
         "config": {"token": "tok", "owner": "o", "repo": "r"},
     }
-    resp1 = client.post("/api/v1/connectors", json=payload)
+    resp1 = client.post("/api/v1/connectors", json=payload, headers=_auth_header(db))
     assert resp1.status_code == 200, resp1.text
     first_id = resp1.json()["id"]
 
-    resp2 = client.post("/api/v1/connectors", json=payload)
+    resp2 = client.post("/api/v1/connectors", json=payload, headers=_auth_header(db))
     assert resp2.status_code == 200, resp2.text
     assert resp2.json()["id"] == first_id
 
@@ -329,7 +377,7 @@ def test_connector_create_unknown_provider_returns_400(db):
         "organization_id": str(org.id),
         "config": {},
     }
-    resp = client.post("/api/v1/connectors", json=payload)
+    resp = client.post("/api/v1/connectors", json=payload, headers=_auth_header(db))
     assert resp.status_code == 400, resp.text
 
 
@@ -341,7 +389,9 @@ def test_list_connectors_filters_by_organization(db):
     c1 = create_connector(db, provider, org1, config={"token": "a"})
     create_connector(db, provider, org2, config={"token": "b"})
 
-    resp = client.get(f"/api/v1/connectors?organization_id={org1.id}")
+    resp = client.get(
+        f"/api/v1/connectors?organization_id={org1.id}", headers=_auth_header(db)
+    )
     assert resp.status_code == 200, resp.text
     items = resp.json()
     assert len(items) == 1
