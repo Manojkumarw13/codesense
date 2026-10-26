@@ -5,15 +5,32 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.endpoints import ai as ai_endpoint
-from backend.app.api.endpoints import anomalies, bottlenecks, events, health, insights, risk
+from backend.app.api.endpoints import (
+    anomalies,
+    bottlenecks,
+    events,
+    health,
+    insights,
+    providers,
+    risk,
+)
 from backend.app.api.endpoints import health_score as health_score_endpoint
 from backend.app.api.endpoints import metrics as metrics_endpoint
 from backend.app.api.endpoints import ml as ml_endpoint
+from backend.app.auth.router import router as auth_router
 from backend.app.core.database import SessionLocal
 from backend.app.core.exceptions import register_exception_handlers
 from backend.app.core.logging import setup_logging
-from backend.app.core.middleware import RequestIDMiddleware
-from backend.app.core.observability import PrometheusMiddleware, setup_tracing
+from backend.app.core.middleware import (
+    RateLimitMiddleware,
+    RequestIDMiddleware,
+    SecurityHeadersMiddleware,
+)
+from backend.app.core.observability import (
+    PrometheusMiddleware,
+    metrics_response,
+    setup_tracing,
+)
 from backend.app.core.redis import get_redis_client
 from backend.app.core.settings import settings
 from backend.app.services.processing import EventProcessor
@@ -27,8 +44,7 @@ if settings.ENABLE_TRACING:
     setup_tracing(service_name=settings.APP_NAME)
 
 app = FastAPI(
-    title=settings.APP_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    title=settings.APP_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
 # Prometheus middleware (Phase 2 observability) — must be outermost
@@ -37,6 +53,12 @@ if settings.ENABLE_METRICS:
 
 # Request ID Tracking
 app.add_middleware(RequestIDMiddleware)
+
+# Rate limiting (token bucket) on all endpoints
+app.add_middleware(RateLimitMiddleware)
+
+# Security headers on every response
+app.add_middleware(SecurityHeadersMiddleware)
 
 # CORS
 app.add_middleware(
@@ -53,18 +75,32 @@ register_exception_handlers(app)
 # Include routers
 app.include_router(health.router, prefix=settings.API_V1_STR, tags=["health"])
 app.include_router(events.router, prefix=settings.API_V1_STR, tags=["events"])
-app.include_router(metrics_endpoint.router, prefix=settings.API_V1_STR, tags=["observability"])
+app.include_router(providers.router, prefix=settings.API_V1_STR, tags=["providers"])
+app.include_router(
+    metrics_endpoint.router, prefix=settings.API_V1_STR, tags=["observability"]
+)
 app.include_router(risk.router, prefix=settings.API_V1_STR, tags=["risk"])
 app.include_router(anomalies.router, prefix=settings.API_V1_STR, tags=["anomalies"])
 app.include_router(bottlenecks.router, prefix=settings.API_V1_STR, tags=["bottlenecks"])
 app.include_router(insights.router, prefix=settings.API_V1_STR, tags=["insights"])
-app.include_router(health_score_endpoint.router, prefix=settings.API_V1_STR, tags=["health-score"])
+app.include_router(
+    health_score_endpoint.router, prefix=settings.API_V1_STR, tags=["health-score"]
+)
 app.include_router(ml_endpoint.router, prefix=settings.API_V1_STR, tags=["ml"])
 app.include_router(ai_endpoint.router, prefix=settings.API_V1_STR, tags=["ai"])
+app.include_router(auth_router, prefix=settings.API_V1_STR, tags=["auth"])
+
 
 @app.get("/")
 def read_root():
     return {"message": f"Welcome to {settings.APP_NAME} API"}
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics():
+    """Root-level Prometheus metrics endpoint (scrape target)."""
+    return metrics_response()
+
 
 # Background Processing Job — uses asyncio; Celery replaces this when broker available
 async def process_events_loop():

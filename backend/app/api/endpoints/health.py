@@ -2,40 +2,53 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from backend.app.core.connectivity import InternetState, get_internet_state
 from backend.app.core.database import get_db
 from backend.app.core.exceptions import DatabaseError
 from backend.app.core.observability import METRICS_ENABLED
 from backend.app.core.redis import is_redis_available
+from backend.app.core.settings import settings
 from backend.app.worker.base import get_worker_stats
 
 router = APIRouter()
 
+
+def _ai_availability(internet: InternetState) -> bool:
+    """Cloud AI is available only when online AND an LLM key is configured."""
+    return internet is InternetState.ONLINE and bool(settings.OPENROUTER_API_KEY)
+
+
 @router.get("/health")
-def get_health(db: Session = Depends(get_db)):
+def get_health(db: Session = Depends(get_db)):  # noqa: B008
     try:
         db.execute(text("SELECT 1"))
         db_status = "connected"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - DB failure must degrade, never crash health
         raise DatabaseError(message=f"Database connection failed: {e!s}")
 
+    internet = get_internet_state()
     return {
         "status": "ok",
         "database": db_status,
+        "internet": internet.value,
+        "mode": "normal" if internet is InternetState.ONLINE else "offline",
+        "ai_available": _ai_availability(internet),
     }
 
 
 @router.get("/health/detailed")
-def get_detailed_health(db: Session = Depends(get_db)):
+def get_detailed_health(db: Session = Depends(get_db)):  # noqa: B008
     """Detailed health for observability / k8s probes."""
     try:
         db.execute(text("SELECT 1"))
         db_status = "connected"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - DB failure must degrade, never crash health
         raise DatabaseError(message=f"Database connection failed: {e!s}")
 
     # Infrastructure checks – never raise, just report degraded
     redis_status = "connected" if is_redis_available() else "degraded (fallback)"
     worker = get_worker_stats()
+    internet = get_internet_state()
     return {
         "status": "ok",
         "database": db_status,
@@ -47,5 +60,7 @@ def get_detailed_health(db: Session = Depends(get_db)):
             "last_run_at": worker.last_run_at,
         },
         "metrics": "enabled" if METRICS_ENABLED else "disabled",
+        "internet": internet.value,
+        "mode": "normal" if internet is InternetState.ONLINE else "offline",
+        "ai_available": _ai_availability(internet),
     }
-

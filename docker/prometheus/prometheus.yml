@@ -12,6 +12,18 @@ scrape_configs:
           - backend:8000
     scrape_interval: 15s
 
+  - job_name: postgres
+    static_configs:
+      - targets:
+          - postgres:9187
+    scrape_interval: 15s
+
+  - job_name: redis
+    static_configs:
+      - targets:
+          - redis:9121
+    scrape_interval: 15s
+
   - job_name: prometheus
     static_configs:
       - targets:

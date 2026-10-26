@@ -1,11 +1,22 @@
 """Bottlenecks API."""
+
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from backend.app.api.endpoints.detection_serialisation import (
+    serialise_detection,
+    serialise_detections,
+)
+from backend.app.api.auth_deps import (
+    REQUIRED_ROLES,
+    require_auth,
+    require_team_access_if,
+)
 from backend.app.core.database import get_db
+from backend.app.models.core import User
 from backend.app.models.analytics import Bottleneck
 
 router = APIRouter()
@@ -19,9 +30,11 @@ def list_bottlenecks(
     severity: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
+    current_user: User = Depends(require_auth(REQUIRED_ROLES)),
     db: Session = Depends(get_db),
 ):
     """Get detected flow bottlenecks."""
+    require_team_access_if(current_user, db, team_id)
     q = db.query(Bottleneck)
     if organization_id:
         q = q.filter(Bottleneck.organization_id == organization_id)
@@ -32,15 +45,23 @@ def list_bottlenecks(
     if severity:
         q = q.filter(Bottleneck.severity == severity)
     total = q.count()
-    items = q.order_by(Bottleneck.detected_at.desc(), Bottleneck.id.desc()).offset(skip).limit(limit).all()
-    return {"total": total, "skip": skip, "limit": limit, "items": items}
+    items = (
+        q.order_by(Bottleneck.detected_at.desc(), Bottleneck.id.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return {
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+        "items": serialise_detections(items, db),
+    }
 
 
 @router.get("/bottlenecks/{bottleneck_id}")
 def get_bottleneck(bottleneck_id: uuid.UUID, db: Session = Depends(get_db)):
-    from fastapi import HTTPException
-
     b = db.query(Bottleneck).get(bottleneck_id)
     if not b:
         raise HTTPException(status_code=404, detail="Bottleneck not found")
-    return b
+    return serialise_detection(b, db)
